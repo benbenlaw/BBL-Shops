@@ -1,0 +1,27 @@
+{
+  "catalogue_item": {
+    "components": {
+      "minecraft:potion_contents": {
+        "potion": "minecraft:water"
+      }
+    },
+    "count": 1,
+    "id": "minecraft:potion"
+  },
+  "items": [
+    { "stack": { "id": "minecraft:wooden_sword", "count": 1 }, "price": 50 },
+    { "stack": { "id": "minecraft:iron_sword", "count": 1 }, "price": 200 },
+    {
+      "stack": {
+        "components": {
+          "minecraft:potion_contents": {
+            "potion": "minecraft:water"
+          }
+        },
+        "count": 1,
+        "id": "minecraft:potion"
+      },
+      "price": 200
+    }
+  ]
+}

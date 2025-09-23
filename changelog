@@ -1,0 +1,8 @@
+//Changelog
+
+//Todo
+Currency System
+Config to assign values to items to provide compat with any mods
+Save currency to player as a value to be used in shops with out having a load of the currency item in the inventory
+Recipe system for shops?
+make command run with perms 4

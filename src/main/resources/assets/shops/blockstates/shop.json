@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "shops:block/shop",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "shops:block/shop"
+    },
+    "facing=south": {
+      "model": "shops:block/shop",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "shops:block/shop",
+      "y": 270
+    }
+  }
+}

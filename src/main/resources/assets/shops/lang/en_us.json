@@ -1,0 +1,26 @@
+{
+
+  "itemGroup.shops": "BBL Shops",
+  "item.shops.copper_coin": "Copper Coin",
+  "item.shops.iron_coin": "Iron Coin",
+  "item.shops.gold_coin": "Gold Coin",
+  "item.shops.player_balance_card": "Player Balance Card",
+  "block.shops.shop": "Shop",
+  "tooltip.shops.balance": "Balance: %s B Bucks",
+  "tooltip.shops.shift": "Press SHIFT for more info",
+  "tooltip.shops.bound_to": "This card is bound to %s",
+  "tooltip.shops.how_to": "Right Click to bound to your account",
+  "tooltip.shops.value": "Worth %s B Bucks",
+
+  "jei.shops.selling_price": "Sells for: %s B Bucks",
+  "jei.shops.buying_price": "Buys for: %s B Bucks",
+  "jei.shops.selling": "Can be Sold",
+  "jei.shops.buying": "Can be Bought",
+
+  "block.shops.shop.player_balance_card": "Used for automatic payments",
+  "block.shops.shop.selling_input": "Selling Input",
+  "block.shops.shop.catalog": "Insert Catalog",
+  "block.shops.shop.output": "Shop Output",
+  "block.shops.shop.auto_produce": "Right Click on an item in the shop to set as the item that is auto purchased"
+
+}
