@@ -5,9 +5,8 @@ import com.benbenlaw.shops.block.ShopsBlocks;
 import com.benbenlaw.shops.integration.jei.dummy.BuyingRecipe;
 import com.benbenlaw.shops.integration.jei.dummy.SellingRecipe;
 import com.benbenlaw.shops.item.ShopsItems;
-import com.benbenlaw.shops.item.util.ShopEntry;
-import com.benbenlaw.shops.item.util.ShopRegistry;
-import com.benbenlaw.shops.util.ExchangeRegistry;
+import com.benbenlaw.shops.shop.ShopEntry;
+import com.benbenlaw.shops.shop.ShopRegistry;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -19,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,37 +66,47 @@ public class JEIShopsPlugin implements IModPlugin {
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        List<ItemStack> allStacks = new ArrayList<>();
-        List<Integer> allPrices = new ArrayList<>();
+        List<ItemStack> sellStacks = new ArrayList<>();
+        List<Integer> sellPrices = new ArrayList<>();
 
-        for (Map.Entry<ItemStack, Integer> entry : ExchangeRegistry.EXCHANGE_RATES.entrySet()) {
-            ItemStack stack = entry.getKey().copy();
-            stack.setCount(entry.getKey().getCount()); // keep the original count
-            allStacks.add(stack);
-            allPrices.add(entry.getValue()); // store the price separately
+        // Group buying recipes by catalogue item
+        Map<ItemStack, List<ShopEntry>> buyGroups = new HashMap<>();
+
+        for (ShopEntry entry : ShopRegistry.getAllEntries()) {
+            if (entry.getMode() == ShopEntry.ShopMode.PLAYER_SELLS) {
+                // Selling items (player → shop)
+                ItemStack stack = entry.getItem().copy();
+                sellStacks.add(stack);
+                sellPrices.add(entry.getPrice());
+            } else if (entry.getMode() == ShopEntry.ShopMode.PLAYER_BUYS) {
+                // Buying items (shop → player)
+                ItemStack catalogue = entry.getRequiredCatalogItem();
+                buyGroups.computeIfAbsent(catalogue, k -> new ArrayList<>()).add(entry);
+            }
         }
 
-        SellingRecipe combinedRecipe = new SellingRecipe(allStacks, allPrices);
-        registration.addRecipes(SELLING_RECIPE_TYPE, List.of(combinedRecipe));
+        // Register combined selling recipe
+        if (!sellStacks.isEmpty()) {
+            SellingRecipe combinedSellRecipe = new SellingRecipe(sellStacks, sellPrices);
+            registration.addRecipes(SELLING_RECIPE_TYPE, List.of(combinedSellRecipe));
+        }
 
-        List<BuyingRecipe> recipes = new ArrayList<>();
+        // Register grouped buying recipes
+        List<BuyingRecipe> buyingRecipes = new ArrayList<>();
 
-        for (Map.Entry<ItemStack, List<ShopEntry>> entry : ShopRegistry.CATALOGUE_ITEMS.entrySet()) {
-            ItemStack catalogueStack = entry.getKey().copy();
-            List<ShopEntry> shopEntries = entry.getValue();
-
+        for (Map.Entry<ItemStack, List<ShopEntry>> group : buyGroups.entrySet()) {
+            ItemStack catalogueStack = group.getKey().copy();
             List<ItemStack> inputs = new ArrayList<>();
             List<Integer> prices = new ArrayList<>();
 
-            for (ShopEntry shopEntry : shopEntries) {
-                inputs.add(shopEntry.getItem().copy());
-                prices.add(shopEntry.getPrice());
+            for (ShopEntry entry : group.getValue()) {
+                inputs.add(entry.getItem().copy());
+                prices.add(entry.getPrice());
             }
 
-            BuyingRecipe recipe = new BuyingRecipe(catalogueStack, inputs, prices);
-            recipes.add(recipe);
+            buyingRecipes.add(new BuyingRecipe(catalogueStack, inputs, prices));
         }
 
-        registration.addRecipes(BUYING_RECIPE_TYPE, recipes);
+        registration.addRecipes(BUYING_RECIPE_TYPE, buyingRecipes);
     }
 }

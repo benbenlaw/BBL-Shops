@@ -1,5 +1,24 @@
 //Changelog
 
+1.0.2
+- Added loot table and pickaxe tag to shop
+- Completely reworked shop json, now uses a single catalog item then each shop entry has a mode of buying or selling
+
+```js
+{
+  "catalog": { "id": "minecraft:book" },
+  "entries": [
+    { "stack": { "id": "minecraft:paper", "count": 2 }, "price": 50, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:leather", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:diamond", "count": 1 }, "price": 250, "mode": "player_sells" }
+  ]
+}
+```
+- these now go into the data/modid/catalogs folder instead of the 2 old ones
+- Right/Left Clicking on the auto produced item will now clear it
+- Shop now scrolls if there are more than 12 entries to buy
+- Added Auto Updating to curse forge
+
 1.0.1
 - Player balance command add, set and remove now require permission level 4
 - Added player_balance transfer command to transfer from your balance to another player's balance

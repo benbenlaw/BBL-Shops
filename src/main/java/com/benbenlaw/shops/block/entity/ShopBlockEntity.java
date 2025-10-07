@@ -3,11 +3,11 @@ package com.benbenlaw.shops.block.entity;
 import com.benbenlaw.shops.capability.PlayerBalanceData;
 import com.benbenlaw.shops.capability.ShopsAttachments;
 import com.benbenlaw.shops.item.ShopsDataComponents;
-import com.benbenlaw.shops.item.util.ShopEntry;
-import com.benbenlaw.shops.item.util.ShopRegistry;
+import com.benbenlaw.shops.shop.CombinedShopLoader;
+import com.benbenlaw.shops.shop.ShopEntry;
+import com.benbenlaw.shops.shop.ShopRegistry;
 import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
 import com.benbenlaw.shops.screen.ShopMenu;
-import com.benbenlaw.shops.util.ExchangeRegistry;
 import com.benbenlaw.shops.util.InputOutputItemHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -34,7 +34,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -106,73 +105,77 @@ public class ShopBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void tick() {
-
-        assert level != null;
-        if (level.isClientSide()) return;
+        if (level == null || level.isClientSide()) return;
 
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
+        ItemStack balanceCard = itemHandler.getStackInSlot(PLAYER_BALANCE_CARD);
 
-        if (!input.isEmpty() && itemHandler.getStackInSlot(PLAYER_BALANCE_CARD).has(ShopsDataComponents.PLAYER_UUID)) {
-            int value = ExchangeRegistry.getValue(input);
+        if (balanceCard.has(ShopsDataComponents.PLAYER_UUID)) {
+            Player cardPlayer = level.getPlayerByUUID(
+                    UUID.fromString(Objects.requireNonNull(balanceCard.get(ShopsDataComponents.PLAYER_UUID)))
+            );
 
-            if (value > 0) {
-                int requiredAmount = ExchangeRegistry.getRequiredAmount(input);
+            if (!(cardPlayer instanceof ServerPlayer serverPlayer)) return;
 
-                if (input.getCount() < requiredAmount) return;
+            PlayerBalanceData balanceData = cardPlayer.getData(ShopsAttachments.PLAYER_BALANCE);
 
-                itemHandler.extractItem(INPUT_SLOT, requiredAmount, false);
+            // --- SELLING ---
+            if (!input.isEmpty()) {
+                ShopEntry sellEntry = ShopRegistry.getAllEntries().stream()
+                        .filter(e -> e.getMode() == ShopEntry.ShopMode.PLAYER_SELLS)
+                        .filter(e -> ItemStack.isSameItemSameComponents(e.getItem(), input))
+                        .findFirst()
+                        .orElse(null);
 
-                Player cardPlayer = level.getPlayerByUUID(UUID.fromString(
-                        Objects.requireNonNull(itemHandler.getStackInSlot(PLAYER_BALANCE_CARD)
-                                .get(ShopsDataComponents.PLAYER_UUID))
-                ));
+                if (sellEntry != null) {
+                    ItemStack requiredCatalogue = sellEntry.getRequiredCatalogItem();
+                    int requiredAmount = sellEntry.getItem().getCount();
+                    int price = sellEntry.getPrice();
 
-                if (cardPlayer != null) {
-                    PlayerBalanceData cardData = cardPlayer.getData(ShopsAttachments.PLAYER_BALANCE);
-                    cardData.addBalance(value);
-                    PacketDistributor.sendToPlayer((ServerPlayer) cardPlayer, new SyncPlayerBalanceToClient(cardData.getBalance()));
+                    if (input.getCount() >= requiredAmount &&
+                            (requiredCatalogue.isEmpty() || playerHasCatalogueItem(requiredCatalogue))) {
 
+                        itemHandler.extractItem(INPUT_SLOT, requiredAmount, false);
+                        balanceData.addBalance(price);
+
+                        PacketDistributor.sendToPlayer(serverPlayer,
+                                new SyncPlayerBalanceToClient(balanceData.getBalance()));
+
+                        setChanged();
+                    }
                 }
-
             }
-        }
 
-        if (!autoProduced.isEmpty()) {
-            ItemStack balanceCard = itemHandler.getStackInSlot(PLAYER_BALANCE_CARD);
+            // --- BUYING ---
+            if (!autoProduced.isEmpty()) {
+                ShopEntry buyEntry = ShopRegistry.getAllEntries().stream()
+                        .filter(e -> e.getMode() == ShopEntry.ShopMode.PLAYER_BUYS)
+                        .filter(e -> ItemStack.isSameItemSameComponents(e.getItem(), autoProduced))
+                        .findFirst()
+                        .orElse(null);
 
-            if (balanceCard.has(ShopsDataComponents.PLAYER_UUID)) {
-                assert level != null;
-                Player cardPlayer = level.getPlayerByUUID(
-                        UUID.fromString(Objects.requireNonNull(balanceCard.get(ShopsDataComponents.PLAYER_UUID)))
-                );
+                if (buyEntry != null) {
+                    ItemStack requiredCatalogue = buyEntry.getRequiredCatalogItem();
+                    int price = buyEntry.getPrice();
+                    ItemStack toOutput = autoProduced.copy();
 
-                if (cardPlayer != null) {
-                    PlayerBalanceData cardData = cardPlayer.getData(ShopsAttachments.PLAYER_BALANCE);
-                    ShopEntry shopEntry = ShopRegistry.getShopItem(autoProduced.getItem());
+                    if (balanceData.getBalance() >= price &&
+                            (requiredCatalogue.isEmpty() || playerHasCatalogueItem(requiredCatalogue)) &&
+                            canOutput(toOutput)) {
 
-                    if (shopEntry != null && cardData.getBalance() >= shopEntry.getPrice()) {
+                        balanceData.setBalance(balanceData.getBalance() - price);
+                        addToOutputSlot(toOutput);
 
-                        ItemStack requiredCatalogueItem = shopEntry.getRequiredCatalogueItem();
+                        PacketDistributor.sendToPlayer(serverPlayer,
+                                new SyncPlayerBalanceToClient(balanceData.getBalance()));
 
-                        if (playerHasCatalogueItem(requiredCatalogueItem)) {
-                            ItemStack stackToAdd = autoProduced.copy();
-
-                            if (canOutput(stackToAdd)) {
-                                int newBalance = cardData.getBalance() - shopEntry.getPrice();
-                                cardData.setBalance(newBalance);
-
-                                addToOutputSlot(stackToAdd);
-                                PacketDistributor.sendToPlayer((ServerPlayer) cardPlayer, new SyncPlayerBalanceToClient(cardData.getBalance()));
-
-                                setChanged();
-                            }
-                        }
+                        setChanged();
                     }
                 }
             }
         }
-
     }
+
 
     private boolean playerHasCatalogueItem(ItemStack catalogueItem) {
         return ItemStack.isSameItemSameComponents(itemHandler.getStackInSlot(CATALOG), catalogueItem);

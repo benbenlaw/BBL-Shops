@@ -10,14 +10,12 @@ import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.ShopsNetworking;
 import com.benbenlaw.shops.screen.ShopScreen;
 import com.benbenlaw.shops.screen.ShopsMenuTypes;
-import com.benbenlaw.shops.util.SellingLoader;
-import com.benbenlaw.shops.util.ShopCatalogueLoader;
+import com.benbenlaw.shops.shop.CombinedShopLoader;
 import com.google.gson.Gson;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -47,7 +45,6 @@ public class Shops {
         ShopsBlockEntities.BLOCK_ENTITIES.register(eventBus);
         ShopsDataComponents.COMPONENTS.register(eventBus);
 
-
         eventBus.addListener(this::commonSetup);
         NeoForge.EVENT_BUS.addListener(Shops::onAddReloadListener);
         eventBus.addListener(Shops::registerCapabilities);
@@ -55,8 +52,7 @@ public class Shops {
 
     @SubscribeEvent
     private static void onAddReloadListener(AddReloadListenerEvent event) {
-        event.addListener(new ShopCatalogueLoader(new Gson(), "catalogs"));
-        event.addListener(new SellingLoader(new Gson(), "selling"));
+        event.addListener(new CombinedShopLoader(new Gson(), "catalogs"));
     }
 
     @SubscribeEvent
@@ -73,16 +69,10 @@ public class Shops {
         @SubscribeEvent
         public static void registerScreens(RegisterMenuScreensEvent event) {
             event.register(ShopsMenuTypes.SHOP_MENU.get(), ShopScreen::new);
-            //event.register(RoutersMenuTypes.IMPORTER_MENU.get(), ImporterScreen::new);
-            //event.register(RoutersMenuTypes.CONFIG_MENU.get(), ConfigScreen::new);
-
-
         }
 
         @SubscribeEvent
         public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-            // Moved to event bus
-            //event.registerBlockEntityRenderer(RoutersBlockEntities.EXPORTER_BLOCK_ENTITY.get(), ExporterBlockEntityRenderer::new);
         }
     }
 }

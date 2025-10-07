@@ -1,9 +1,0 @@
-{
-  "catalogue_item": {
-    "id": "minecraft:book"
-  },
-  "items": [
-    { "stack": { "id": "minecraft:paper", "count": 2 }, "price": 50 },
-    { "stack": { "id": "minecraft:leather", "count": 1 }, "price": 200 }
-  ]
-}

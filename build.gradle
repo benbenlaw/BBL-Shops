@@ -1,4 +1,4 @@
-//import net.darkhax.curseforgegradle.TaskPublishCurseForge
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
 
 plugins {
     id 'java-library'
@@ -122,13 +122,13 @@ idea {
         downloadJavadoc = true
     }
 }
-/*
+
 tasks.register('publishCurseForge', TaskPublishCurseForge) {
     group "modpublishing"
 
     apiToken = System.getenv("curseforge_token").toString()
 
-    def projectId = 1334500
+    def projectId = 1352211
     def mainFile = upload(projectId, jar)
 
     mainFile.changelog = changelog
@@ -138,6 +138,7 @@ tasks.register('publishCurseForge', TaskPublishCurseForge) {
     mainFile.addEnvironment("server", "client")
 }
 
+/*
 tasks.getByName("modrinth").setGroup("modpublishing")
 
 modrinth {

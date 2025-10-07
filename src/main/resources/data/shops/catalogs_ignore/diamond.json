@@ -1,9 +1,0 @@
-{
-  "catalogue_item": {
-    "id": "minecraft:diamond"
-  },
-  "items": [
-    { "stack": { "id": "minecraft:diamond", "count": 1 }, "price": 50 },
-    { "stack": { "id": "minecraft:emerald", "count": 1 }, "price": 200 }
-  ]
-}
