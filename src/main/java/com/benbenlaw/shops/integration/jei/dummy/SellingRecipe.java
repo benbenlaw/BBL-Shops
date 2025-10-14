@@ -4,5 +4,5 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-public record SellingRecipe (List<ItemStack> inputs, List<Integer> prices) {
+public record SellingRecipe (ItemStack catalog, List<ItemStack> inputs, List<Integer> prices) {
 }

@@ -1,5 +1,9 @@
 //Changelog
 
+1.0.3
+- Fixed JEI support to show buying and selling correctly
+- Changed names to Player Buying and Player Selling in JEI to make it more clear
+
 1.0.2
 - Added loot table and pickaxe tag to shop
 - Completely reworked shop json, now uses a single catalog item then each shop entry has a mode of buying or selling

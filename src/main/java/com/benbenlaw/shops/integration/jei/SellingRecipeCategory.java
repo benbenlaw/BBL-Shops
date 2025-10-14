@@ -1,12 +1,12 @@
 package com.benbenlaw.shops.integration.jei;
 
 import com.benbenlaw.shops.Shops;
+import com.benbenlaw.shops.integration.jei.dummy.BuyingRecipe;
 import com.benbenlaw.shops.integration.jei.dummy.SellingRecipe;
 import com.benbenlaw.shops.item.ShopsItems;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.widgets.IScrollGridWidget;
 import mezz.jei.api.gui.widgets.IScrollGridWidgetFactory;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
@@ -19,14 +19,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SellingRecipeCategory implements IRecipeCategory<SellingRecipe> {
 
     public final static ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(Shops.MOD_ID, "selling_recipe");
     public final static ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Shops.MOD_ID, "textures/gui/jei_selling.png");
+            ResourceLocation.fromNamespaceAndPath(Shops.MOD_ID, "textures/gui/jei_buying.png");
     public final IDrawable background;
     public final IDrawable icon;
     private final IScrollGridWidgetFactory<?> scrollGridWidgetFactory;
@@ -34,8 +33,8 @@ public class SellingRecipeCategory implements IRecipeCategory<SellingRecipe> {
     public SellingRecipeCategory(IGuiHelper helper) {
         this.background = helper.createDrawable(TEXTURE, 0, 0, 142, 37);
         this.icon = helper.createDrawableIngredient(VanillaTypes.ITEM_STACK, new ItemStack(ShopsItems.GOLD_COIN.get()));
-        this.scrollGridWidgetFactory = helper.createScrollGridFactory(7, 2);
-        this.scrollGridWidgetFactory.setPosition(0, 0);
+        this.scrollGridWidgetFactory = helper.createScrollGridFactory(5, 2);
+        this.scrollGridWidgetFactory.setPosition(32, 0);
     }
 
     @Override
@@ -61,6 +60,9 @@ public class SellingRecipeCategory implements IRecipeCategory<SellingRecipe> {
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SellingRecipe sellingRecipe, IFocusGroup iFocusGroup) {
 
+        builder.addSlot(RecipeIngredientRole.CATALYST, 7, 11)
+                .addItemStack(sellingRecipe.catalog());
+
         for (var result : getInputs(sellingRecipe)) {
             int i = sellingRecipe.inputs().indexOf(result);
             builder.addSlotToWidget(RecipeIngredientRole.OUTPUT, this.scrollGridWidgetFactory)
@@ -70,10 +72,10 @@ public class SellingRecipeCategory implements IRecipeCategory<SellingRecipe> {
                         tooltip.add(Component.translatable("jei.shops.selling_price", price).withStyle(ChatFormatting.GOLD));
                     });
         }
-
     }
 
-    private static List<ItemStack> getInputs(SellingRecipe sellingRecipe) {
-        return sellingRecipe.inputs();
+    private List<ItemStack> getInputs(SellingRecipe recipe) {
+        return recipe.inputs();
     }
+
 }

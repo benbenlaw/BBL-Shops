@@ -15,6 +15,7 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -63,43 +64,33 @@ public class JEIShopsPlugin implements IModPlugin {
         registration.addRecipeCategories(new BuyingRecipeCategory(guiHelper));
     }
 
-
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        List<ItemStack> sellStacks = new ArrayList<>();
-        List<Integer> sellPrices = new ArrayList<>();
-
-        // Group buying recipes by catalogue item
-        Map<ItemStack, List<ShopEntry>> buyGroups = new HashMap<>();
+        Map<Item, List<ShopEntry>> buyGroups = new HashMap<>();
+        Map<Item, List<ShopEntry>> sellGroups = new HashMap<>();
 
         for (ShopEntry entry : ShopRegistry.getAllEntries()) {
+            ItemStack catalogueStack = entry.getRequiredCatalogItem().copy();
+            Item catalogueItem = catalogueStack.getItem();
+
             if (entry.getMode() == ShopEntry.ShopMode.PLAYER_SELLS) {
-                // Selling items (player → shop)
-                ItemStack stack = entry.getItem().copy();
-                sellStacks.add(stack);
-                sellPrices.add(entry.getPrice());
+                sellGroups.computeIfAbsent(catalogueItem, k -> new ArrayList<>()).add(entry);
             } else if (entry.getMode() == ShopEntry.ShopMode.PLAYER_BUYS) {
-                // Buying items (shop → player)
-                ItemStack catalogue = entry.getRequiredCatalogItem();
-                buyGroups.computeIfAbsent(catalogue, k -> new ArrayList<>()).add(entry);
+                buyGroups.computeIfAbsent(catalogueItem, k -> new ArrayList<>()).add(entry);
             }
         }
 
-        // Register combined selling recipe
-        if (!sellStacks.isEmpty()) {
-            SellingRecipe combinedSellRecipe = new SellingRecipe(sellStacks, sellPrices);
-            registration.addRecipes(SELLING_RECIPE_TYPE, List.of(combinedSellRecipe));
-        }
-
-        // Register grouped buying recipes
         List<BuyingRecipe> buyingRecipes = new ArrayList<>();
+        List<SellingRecipe> sellingRecipes = new ArrayList<>();
 
-        for (Map.Entry<ItemStack, List<ShopEntry>> group : buyGroups.entrySet()) {
-            ItemStack catalogueStack = group.getKey().copy();
+        for (Map.Entry<Item, List<ShopEntry>> e : buyGroups.entrySet()) {
+            Item catalogueItem = e.getKey();
+            ItemStack catalogueStack = new ItemStack(catalogueItem); // JEI icon
+
             List<ItemStack> inputs = new ArrayList<>();
             List<Integer> prices = new ArrayList<>();
 
-            for (ShopEntry entry : group.getValue()) {
+            for (ShopEntry entry : e.getValue()) {
                 inputs.add(entry.getItem().copy());
                 prices.add(entry.getPrice());
             }
@@ -107,6 +98,25 @@ public class JEIShopsPlugin implements IModPlugin {
             buyingRecipes.add(new BuyingRecipe(catalogueStack, inputs, prices));
         }
 
+        for (Map.Entry<Item, List<ShopEntry>> e : sellGroups.entrySet()) {
+            Item catalogueItem = e.getKey();
+            ItemStack catalogueStack = new ItemStack(catalogueItem); // JEI icon
+
+            List<ItemStack> inputs = new ArrayList<>();
+            List<Integer> prices = new ArrayList<>();
+
+            for (ShopEntry entry : e.getValue()) {
+                inputs.add(entry.getItem().copy());
+                prices.add(entry.getPrice());
+            }
+
+            sellingRecipes.add(new SellingRecipe(catalogueStack, inputs, prices));
+        }
+
         registration.addRecipes(BUYING_RECIPE_TYPE, buyingRecipes);
+        registration.addRecipes(SELLING_RECIPE_TYPE, sellingRecipes);
     }
+
+
+
 }
