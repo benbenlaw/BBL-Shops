@@ -21,5 +21,7 @@
   "block.shops.shop.selling_input": "Selling Input",
   "block.shops.shop.catalog": "Insert Catalog",
   "block.shops.shop.output": "Shop Output",
-  "block.shops.shop.auto_produce": "Right Click on an item in the shop to set as the item that is auto purchased"
+  "block.shops.shop.auto_produce": "Right Click on an item in the shop to set as the item that is auto purchased",
+
+  "sounds.shops.coin_collected": "Coin Collected"
 }

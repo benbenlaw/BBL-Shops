@@ -1,0 +1,8 @@
+{
+  "coin_collected": {
+    "subtitle": "sounds.shops.coin_collected",
+    "sounds": [
+      "shops:coin_collected"
+    ]
+  }
+}

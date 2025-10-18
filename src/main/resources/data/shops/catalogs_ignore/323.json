@@ -1,0 +1,7 @@
+{
+  "catalog": { "id": "minecraft:book" },
+  "entries": [
+    { "stack": { "id": "minecraft:dirt", "count": 1 }, "price": 250, "mode": "player_sells" },
+    { "stack": { "id": "minecraft:gold_nugget", "count": 2 }, "price": 50, "mode": "player_buys" }
+  ]
+}

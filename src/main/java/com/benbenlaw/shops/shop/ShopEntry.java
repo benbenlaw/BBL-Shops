@@ -2,8 +2,14 @@ package com.benbenlaw.shops.shop;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.entity.animal.Cod;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.List;
 import java.util.Locale;
 
 public class ShopEntry {
@@ -37,6 +43,18 @@ public class ShopEntry {
             Codec.INT.fieldOf("price").forGetter(ShopEntry::getPrice),
             MODE_CODEC.fieldOf("mode").forGetter(ShopEntry::getMode)
     ).apply(shopEntryInstance, (item, price, mode) -> new ShopEntry(item, price, mode, ItemStack.EMPTY)));
+
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, ShopEntry> STREAM_CODEC = StreamCodec.composite(
+            ItemStack.STREAM_CODEC, ShopEntry::getItem,
+            ByteBufCodecs.INT, ShopEntry::getPrice,
+            ByteBufCodecs.STRING_UTF8, entry -> entry.getMode().name(),
+            ItemStack.STREAM_CODEC, ShopEntry::getRequiredCatalogItem,
+            (item, price, modeString, catalog) -> new ShopEntry(item, price, ShopMode.valueOf(modeString.toUpperCase()), catalog)
+    );
+
+
+
 
 }
 

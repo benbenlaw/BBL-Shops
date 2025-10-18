@@ -14,6 +14,7 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -116,7 +117,4 @@ public class JEIShopsPlugin implements IModPlugin {
         registration.addRecipes(BUYING_RECIPE_TYPE, buyingRecipes);
         registration.addRecipes(SELLING_RECIPE_TYPE, sellingRecipes);
     }
-
-
-
 }

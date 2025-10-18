@@ -1,6 +1,7 @@
 {
   "catalog": { "id": "minecraft:book" },
   "entries": [
+    { "stack": { "id": "minecraft:diamond", "count": 1 }, "price": 250, "mode": "player_sells" },
     { "stack": { "id": "minecraft:paper", "count": 2 }, "price": 50, "mode": "player_buys" },
     { "stack": { "id": "minecraft:leather", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:diamond", "count": 1 }, "price": 200, "mode": "player_buys" },
@@ -18,7 +19,6 @@
     { "stack": { "id": "minecraft:feather", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:egg", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:wooden_pickaxe", "count": 1 }, "price": 200, "mode": "player_buys" },
-    { "stack": { "id": "minecraft:iron_pickaxe", "count": 1 }, "price": 200, "mode": "player_buys" },
-    { "stack": { "id": "minecraft:diamond", "count": 1 }, "price": 250, "mode": "player_sells" }
+    { "stack": { "id": "minecraft:iron_pickaxe", "count": 1 }, "price": 200, "mode": "player_buys" }
   ]
 }

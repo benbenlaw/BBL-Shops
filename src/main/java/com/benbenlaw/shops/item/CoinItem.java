@@ -2,6 +2,7 @@ package com.benbenlaw.shops.item;
 
 import com.benbenlaw.shops.capability.ShopsAttachments;
 import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
+import com.benbenlaw.shops.sound.ShopsSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -30,7 +31,7 @@ public class CoinItem extends Item {
     public void inventoryTick(ItemStack stack, Level level, Entity entity, int p_41407_, boolean p_41408_) {
         if (!level.isClientSide()) {
 
-            if (entity instanceof Player player) {
+            if (entity instanceof Player player && level.getGameTime() % 20 == 0) {
 
                 stack.shrink(1);
                 int currentBalance = player.getData(ShopsAttachments.PLAYER_BALANCE).getBalance();
@@ -38,6 +39,7 @@ public class CoinItem extends Item {
 
                 player.getData(ShopsAttachments.PLAYER_BALANCE).setBalance(newBalance);
                 PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerBalanceToClient(newBalance));
+                level.playSound(null, player.blockPosition(), ShopsSounds.COIN_COLLECTED.get(), player.getSoundSource(), 0.5f, 1.0f);
             }
         }
     }

@@ -59,4 +59,14 @@ public class ShopRegistry {
         }
         return -1;
     }
+
+    private static boolean synced = false;
+
+    public static boolean isSynced() {
+        return synced;
+    }
+
+    public static void setSynced(boolean value) {
+        synced = value;
+    }
 }

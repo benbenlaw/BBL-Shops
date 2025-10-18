@@ -1,5 +1,11 @@
 //Changelog
 
+1.0.4
+- Fixed custom data loading recipes not actually being on the client side, fixes missing recipes in JEI for selling and buying items
+- Balance now saves after death
+- Coins now added to balance every seconds instead of every tick to reduce impact on performance
+- Coins when added to balance now play a sound effect
+
 1.0.3
 - Fixed JEI support to show buying and selling correctly
 - Changed names to Player Buying and Player Selling in JEI to make it more clear

@@ -11,6 +11,7 @@ import com.benbenlaw.shops.network.ShopsNetworking;
 import com.benbenlaw.shops.screen.ShopScreen;
 import com.benbenlaw.shops.screen.ShopsMenuTypes;
 import com.benbenlaw.shops.shop.CombinedShopLoader;
+import com.benbenlaw.shops.sound.ShopsSounds;
 import com.google.gson.Gson;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -21,6 +22,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
@@ -44,6 +46,7 @@ public class Shops {
         ShopsBlocks.BLOCKS.register(eventBus);
         ShopsBlockEntities.BLOCK_ENTITIES.register(eventBus);
         ShopsDataComponents.COMPONENTS.register(eventBus);
+        ShopsSounds.SOUND_EVENTS.register(eventBus);
 
         eventBus.addListener(this::commonSetup);
         NeoForge.EVENT_BUS.addListener(Shops::onAddReloadListener);
