@@ -23,6 +23,9 @@ public class ShopsItems {
             () -> new CoinItem(new Item.Properties(), StartUpConfig.goldCoinValue.get()));
 
 
+    //Flare Item
+    public static final DeferredItem<Item> PINATA_FLARE = ITEMS.register("pinata_flare",
+            () -> new PinataFlareItem(new Item.Properties().stacksTo(1)));
 
 
 

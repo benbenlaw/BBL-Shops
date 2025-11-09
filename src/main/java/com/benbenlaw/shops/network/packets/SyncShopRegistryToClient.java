@@ -1,16 +1,13 @@
 package com.benbenlaw.shops.network.packets;
 
 import com.benbenlaw.shops.Shops;
-import com.benbenlaw.shops.capability.ShopsAttachments;
-import com.benbenlaw.shops.shop.ShopEntry;
-import com.benbenlaw.shops.shop.ShopRegistry;
+import com.benbenlaw.shops.loaders.ShopEntry;
+import com.benbenlaw.shops.loaders.ShopRegistry;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import java.util.List;

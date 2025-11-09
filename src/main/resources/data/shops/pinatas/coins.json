@@ -1,0 +1,46 @@
+{
+  "rewards": [
+    {
+      "chance": 1.0,
+      "item": {
+        "count": 1,
+        "id": "shops:copper_coin"
+      }
+    },
+    {
+      "chance": 1.0,
+      "item": {
+        "count": 1,
+        "id": "shops:copper_coin"
+      }
+    },
+    {
+      "chance": 1.0,
+      "item": {
+        "count": 1,
+        "id": "shops:copper_coin"
+      }
+    },
+    {
+      "chance": 1.0,
+      "item": {
+        "count": 1,
+        "id": "shops:copper_coin"
+      }
+    },
+    {
+      "chance": 1.0,
+      "item": {
+        "count": 1,
+        "id": "shops:copper_coin"
+      }
+    },
+    {
+      "chance": 1.0,
+      "item": {
+        "count": 1,
+        "id": "shops:copper_coin"
+      }
+    }
+  ]
+}

@@ -24,4 +24,8 @@ public class ShopsDataComponents {
             COMPONENTS.register("player_username", () ->
                     DataComponentType.<String>builder().persistent(Codec.STRING).networkSynchronized(ByteBufCodecs.STRING_UTF8).build());
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ResourceLocation>> PINATA_ID =
+            COMPONENTS.register("pinata_id", () ->
+                    DataComponentType.<ResourceLocation>builder().persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC).build());
+
 }

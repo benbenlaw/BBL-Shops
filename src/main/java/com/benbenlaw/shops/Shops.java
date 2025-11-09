@@ -4,13 +4,15 @@ import com.benbenlaw.shops.block.ShopsBlocks;
 import com.benbenlaw.shops.block.entity.ShopsBlockEntities;
 import com.benbenlaw.shops.capability.ShopsAttachments;
 import com.benbenlaw.shops.config.StartUpConfig;
+import com.benbenlaw.shops.entity.ShopsEntities;
 import com.benbenlaw.shops.item.ShopsCreativeTab;
 import com.benbenlaw.shops.item.ShopsDataComponents;
 import com.benbenlaw.shops.item.ShopsItems;
+import com.benbenlaw.shops.loaders.PinataLoader;
 import com.benbenlaw.shops.network.ShopsNetworking;
 import com.benbenlaw.shops.screen.ShopScreen;
 import com.benbenlaw.shops.screen.ShopsMenuTypes;
-import com.benbenlaw.shops.shop.CombinedShopLoader;
+import com.benbenlaw.shops.loaders.CombinedShopLoader;
 import com.benbenlaw.shops.sound.ShopsSounds;
 import com.google.gson.Gson;
 import net.neoforged.api.distmarker.Dist;
@@ -22,7 +24,6 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
@@ -47,6 +48,7 @@ public class Shops {
         ShopsBlockEntities.BLOCK_ENTITIES.register(eventBus);
         ShopsDataComponents.COMPONENTS.register(eventBus);
         ShopsSounds.SOUND_EVENTS.register(eventBus);
+        ShopsEntities.ENTITIES.register(eventBus);
 
         eventBus.addListener(this::commonSetup);
         NeoForge.EVENT_BUS.addListener(Shops::onAddReloadListener);
@@ -56,6 +58,7 @@ public class Shops {
     @SubscribeEvent
     private static void onAddReloadListener(AddReloadListenerEvent event) {
         event.addListener(new CombinedShopLoader(new Gson(), "catalogs"));
+        event.addListener(new PinataLoader(new Gson(), "pinatas"));
     }
 
     @SubscribeEvent

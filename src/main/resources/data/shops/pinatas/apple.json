@@ -1,0 +1,23 @@
+{
+  "rewards": [
+    {
+      "chance": 1.0,
+      "item": {
+        "count": 64,
+        "id": "minecraft:diamond"
+      }
+    },    {
+      "chance": 1.0,
+      "item": {
+        "count": 64,
+        "id": "minecraft:diamond"
+      }
+    },    {
+      "chance": 1.0,
+      "item": {
+        "count": 64,
+        "id": "minecraft:diamond"
+      }
+    }
+  ]
+}

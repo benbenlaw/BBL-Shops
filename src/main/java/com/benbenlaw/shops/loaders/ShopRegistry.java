@@ -1,4 +1,4 @@
-package com.benbenlaw.shops.shop;
+package com.benbenlaw.shops.loaders;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

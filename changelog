@@ -1,5 +1,16 @@
 //Changelog
 
+reward crates use item crate drops from sky open crate when empty disappear
+
+1.1.0
+- Added Pinata's inside data/pinatas folder create a list of ChanceResults items after a reload there will be a flare item that is used to spawn the pinata
+- Each hit on the pinata will drop the items inside the list in order until the last entry is completed
+- Each pinata has a texture location that is used for the pinata model based on a horse the texture goes in assets/modid/textures/entity/pinatas/name_or_pinata.png
+- This updated contains a few examples of pinatas
+
+1.0.5
+- Fixed reloading error when using /reload command
+
 1.0.4
 - Fixed custom data loading recipes not actually being on the client side, fixes missing recipes in JEI for selling and buying items
 - Balance now saves after death

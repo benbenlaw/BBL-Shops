@@ -1,4 +1,4 @@
-package com.benbenlaw.shops.shop;
+package com.benbenlaw.shops.loaders;
 
 import com.benbenlaw.shops.network.packets.SyncShopRegistryToClient;
 import com.google.gson.Gson;
