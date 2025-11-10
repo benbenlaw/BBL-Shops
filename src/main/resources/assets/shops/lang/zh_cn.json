@@ -1,0 +1,27 @@
+{
+
+  "itemGroup.shops": "BBL商店",
+  "item.shops.copper_coin": "铜币",
+  "item.shops.iron_coin": "铁币",
+  "item.shops.gold_coin": "金币",
+  "item.shops.player_balance_card": "玩家余额卡",
+  "block.shops.shop": "商店",
+  "tooltip.shops.balance": "余额：%s B币",
+  "tooltip.shops.shift": "按住SHIFT查看更多信息",
+  "tooltip.shops.bound_to": "此卡已绑定至%s",
+  "tooltip.shops.how_to": "右击以绑定至你的账户",
+  "tooltip.shops.value": "价值 %s B币",
+
+  "jei.shops.selling_price": "售卖价：%s B币",
+  "jei.shops.buying_price": "收购价： %s B币",
+  "jei.shops.selling": "玩家售卖",
+  "jei.shops.buying": "玩家购买",
+
+  "block.shops.shop.player_balance_card": "用于自动支付",
+  "block.shops.shop.selling_input": "售卖输入",
+  "block.shops.shop.catalog": "插入商品目录",
+  "block.shops.shop.output": "商店输出",
+  "block.shops.shop.auto_produce": "右击商店内物品，将其设置为自动购买的商品",
+
+  "sounds.shops.coin_collected": "硬币：被收集"
+}
