@@ -20,6 +20,7 @@ import java.util.List;
 
 public class CoinItem extends Item {
 
+
     int value;
 
     public CoinItem(Properties properties, int value) {
