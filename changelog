@@ -2,6 +2,29 @@
 
 reward crates use item crate drops from sky open crate when empty disappear
 
+1.1.1
+- Updated logo
+- Added new pinata textures
+- Changed pinata loader to use a loot table instead of chance results
+- Loader now looks like this;
+```js
+{
+  "main_color": "#FF0000FF",
+  "loot_table": "minecraft:blocks/gravel",
+  "model": "shops:1"
+}```
+- Main color is used to tint the flare item used to spawn the pinata
+- Loot table is used to get the items that will drop from the pinata
+- model is used to select the texture for the pinata based on a horse model we have 1-10 thanks @Yuki for these textures
+- Pinata flares now dynamically create there texture based on the main color in the loader file
+- Flare now consumed on use
+- Reduced shadow size
+- Pinatas can no longer be sat on by players
+- Pinatas now drop in the exact location the flare was used, with rotation looking at the player
+- Pinatas now take between 3 to 7 hits to break into loot
+- Loot now spawns at once
+- This update contains a few example pinatas in data/shops/pinatas which will be removed in a future update
+
 1.1.0
 - Added Pinata's inside data/pinatas folder create a list of ChanceResults items after a reload there will be a flare item that is used to spawn the pinata
 - Each hit on the pinata will drop the items inside the list in order until the last entry is completed

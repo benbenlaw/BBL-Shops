@@ -39,13 +39,10 @@ public class PinataLoader extends SimpleJsonResourceReloadListener {
         });
     }
 
-    public static List<ChanceResult> getRewardsForPinata(ResourceLocation id) {
-        PinataData data = PINATAS.get(id);
-        if (data != null) {
-            return data.rewards();
-        }
-        return new ArrayList<>();
+    public static PinataData getPinata(ResourceLocation id) {
+        return PINATAS.get(id);
     }
+
 
     public static Map<ResourceLocation, PinataData> getAllPinatas() {
         return Collections.unmodifiableMap(PINATAS);
