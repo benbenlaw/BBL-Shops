@@ -9,6 +9,7 @@ import com.benbenlaw.shops.loaders.ShopRegistry;
 import com.benbenlaw.shops.network.packets.SyncAutoItemToServer;
 import com.benbenlaw.shops.network.packets.SyncPurchaseToServer;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -27,12 +28,16 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 
     // Grid settings
     private final int columns = 6;
-    private final int startX = 35;
+    private final int startX = 28;
     private final int startY = 34;
     private final int spacingX = 18;
     private final int spacingY = 18;
     private final int maxVisibleRows = 2;
     private int scrollOffset = 0;
+
+    //Buttons
+    private Button scrollUpButton;
+    private Button scrollDownButton;
 
     public ItemStack autoProduced;
     private EditBox searchBox;
@@ -56,6 +61,28 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         this.searchBox.setVisible(true);
         this.searchBox.setTextColor(0xFFFFFF);
         this.addRenderableWidget(this.searchBox);
+
+        int buttonX = leftPos + 137;
+        int scrollUpY = topPos + 36;
+        int scrollDownY = topPos + 55;
+
+        scrollUpButton = Button.builder(Component.literal("▲"), button -> {
+            if (scrollOffset > 0) {
+                scrollOffset--;
+            }
+        }).bounds(buttonX, scrollUpY, 12, 12).build();
+
+        scrollDownButton = Button.builder(Component.literal("▼"), button -> {
+            List<ShopEntry> items = getFilteredItems();
+            int totalRows = (int) Math.ceil(items.size() / (double) columns);
+            if (scrollOffset < totalRows - maxVisibleRows) {
+                scrollOffset++;
+            }
+        }).bounds(buttonX, scrollDownY, 12, 12).build();
+
+        this.addRenderableWidget(scrollUpButton);
+        this.addRenderableWidget(scrollDownButton);
+
     }
 
     @Override
@@ -81,6 +108,13 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
                         mouseX, mouseY);
             }
         }
+
+        int totalRows = (int) Math.ceil(getFilteredItems().size() / (double) columns);
+        boolean canScroll = totalRows > maxVisibleRows;
+
+        scrollUpButton.visible = canScroll;
+        scrollDownButton.visible = canScroll;
+
 
         renderAutoProducedItem(graphics, mouseX, mouseY);
         renderSlotTooltips(graphics, mouseX, mouseY, leftPos, topPos);
@@ -187,6 +221,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
                 .toList();
 
         if (searchBox != null && !searchBox.getValue().isEmpty()) {
+            scrollOffset = 0;
             String query = searchBox.getValue().toLowerCase(Locale.ROOT);
             baseItems = baseItems.stream()
                     .filter(entry -> entry.getItem().getHoverName().getString().toLowerCase(Locale.ROOT).contains(query))

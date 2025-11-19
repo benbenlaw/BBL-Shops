@@ -14,6 +14,7 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.ISubtypeRegistration;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -37,7 +38,10 @@ public class JEIShopsPlugin implements IModPlugin {
     public static final RecipeType<BuyingRecipe> BUYING_RECIPE_TYPE =
             new RecipeType<>(BuyingRecipeCategory.UID, BuyingRecipe.class);
 
-
+    @Override
+    public void registerItemSubtypes(ISubtypeRegistration registration) {
+        registration.registerSubtypeInterpreter(ShopsItems.PINATA_FLARE.asItem(), new ItemSubtypeInterpreter());
+    }
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {

@@ -2,6 +2,12 @@
 
 reward crates use item crate drops from sky open crate when empty disappear
 
+1.2.0
+- Added buttons to shop the indicate that there is more items to buy
+- Search box now resets the scroll index to prevent empty search results even when there are items to show
+- JEI now shows all added flare items that are added via data packs
+- Flare item now uses translations "item.shops.pinata_flare.TYPE" type is the path of the pinata json excluding the name space ig shops:mineshaft becomes item.shops.pinata_flare.mineshaft
+
 1.1.1
 - Updated logo
 - Added new pinata textures

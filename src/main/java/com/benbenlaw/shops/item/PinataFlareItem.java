@@ -73,7 +73,9 @@ public class PinataFlareItem extends Item {
         ResourceLocation pinataType = stack.get(ShopsDataComponents.PINATA_ID);
 
         assert pinataType != null;
-        components.add(Component.literal("Pinata Type: " + pinataType));
+
+        String path = pinataType.getPath();
+        components.add(Component.translatable("item.shops.pinata_flare." + path));
     }
 
     public static ItemStack createPinataFlare(ResourceLocation path) {
