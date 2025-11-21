@@ -6,7 +6,11 @@ import com.benbenlaw.shops.item.ShopsDataComponents;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.loaders.PinataData;
 import com.benbenlaw.shops.loaders.PinataLoader;
+import com.benbenlaw.shops.renderer.CrateModel;
+import com.benbenlaw.shops.renderer.CrateModelLayers;
+import com.benbenlaw.shops.renderer.CrateRenderer;
 import com.benbenlaw.shops.renderer.PinataRenderer;
+import net.minecraft.client.renderer.entity.FallingBlockRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,6 +24,12 @@ public class ClientModEvents {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ShopsEntities.PINATA.get(), PinataRenderer::new);
+        event.registerEntityRenderer(ShopsEntities.CRATE.get(), CrateRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(CrateModelLayers.CRATE, CrateModel::createBodyLayer);
     }
 
     @SubscribeEvent

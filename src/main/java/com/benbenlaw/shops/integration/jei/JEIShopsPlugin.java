@@ -41,6 +41,7 @@ public class JEIShopsPlugin implements IModPlugin {
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
         registration.registerSubtypeInterpreter(ShopsItems.PINATA_FLARE.asItem(), new ItemSubtypeInterpreter());
+        registration.registerSubtypeInterpreter(ShopsItems.CRATE_FLARE.asItem(), new ItemSubtypeInterpreterCrate());
     }
 
     @Override

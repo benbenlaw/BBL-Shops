@@ -27,6 +27,9 @@ public class ShopsItems {
     public static final DeferredItem<Item> PINATA_FLARE = ITEMS.register("pinata_flare",
             () -> new PinataFlareItem(new Item.Properties().stacksTo(1)));
 
+    public static final DeferredItem<Item> CRATE_FLARE = ITEMS.register("crate_flare",
+            () -> new CrateFlareItem(new Item.Properties().stacksTo(1)));
+
 
 
 }

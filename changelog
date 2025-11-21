@@ -2,6 +2,19 @@
 
 reward crates use item crate drops from sky open crate when empty disappear
 
+1.3.0
+- When a flare is used a firework is now fired up to the sky, after time the pinata spawns and drops, launch color is based on the color value in the pinata json file
+- Added Stream codec for pinatas,
+- Added client syncing for flares to show correctly in multiplayer
+- Added new flare crate, this flare works similar to the pinata expect it spawns a crate that drops from the sky and opens on impact
+- To add new crate create a json file in data/shops/crates like this
+```js
+{
+  "loot_table": "minecraft:blocks/gravel",
+}```
+- Like Pinatas any loot table can be used here
+- Networking applied to this crate flare as well
+
 1.2.0
 - Added buttons to shop the indicate that there is more items to buy
 - Search box now resets the scroll index to prevent empty search results even when there are items to show

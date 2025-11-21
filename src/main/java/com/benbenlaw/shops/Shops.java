@@ -8,6 +8,7 @@ import com.benbenlaw.shops.entity.ShopsEntities;
 import com.benbenlaw.shops.item.ShopsCreativeTab;
 import com.benbenlaw.shops.item.ShopsDataComponents;
 import com.benbenlaw.shops.item.ShopsItems;
+import com.benbenlaw.shops.loaders.CrateLoader;
 import com.benbenlaw.shops.loaders.PinataLoader;
 import com.benbenlaw.shops.network.ShopsNetworking;
 import com.benbenlaw.shops.screen.ShopScreen;
@@ -59,6 +60,7 @@ public class Shops {
     private static void onAddReloadListener(AddReloadListenerEvent event) {
         event.addListener(new CombinedShopLoader(new Gson(), "catalogs"));
         event.addListener(new PinataLoader(new Gson(), "pinatas"));
+        event.addListener(new CrateLoader(new Gson(), "crates"));
     }
 
     @SubscribeEvent

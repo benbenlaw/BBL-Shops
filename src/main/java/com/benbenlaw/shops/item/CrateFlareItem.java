@@ -1,9 +1,9 @@
 package com.benbenlaw.shops.item;
 
-import com.benbenlaw.shops.entity.PinataEntity;
+import com.benbenlaw.shops.entity.CrateEntity;
 import com.benbenlaw.shops.entity.ShopsEntities;
-import com.benbenlaw.shops.loaders.PinataData;
-import com.benbenlaw.shops.loaders.PinataLoader;
+import com.benbenlaw.shops.loaders.CrateData;
+import com.benbenlaw.shops.loaders.CrateLoader;
 import com.benbenlaw.shops.util.TickScheduler;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.core.BlockPos;
@@ -14,10 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.item.context.UseOnContext;
@@ -25,11 +22,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
-import java.util.Objects;
 
-public class PinataFlareItem extends Item {
+public class CrateFlareItem extends Item {
 
-    public PinataFlareItem(Properties properties) {
+    public CrateFlareItem(Properties properties) {
         super(properties);
     }
 
@@ -41,22 +37,21 @@ public class PinataFlareItem extends Item {
         Vec3 hitVec = exactPos.subtract(Vec3.atLowerCornerOf(pos));
         Direction direction = context.getClickedFace();
         Level level = context.getLevel();
-        PinataEntity pinata = new PinataEntity(ShopsEntities.PINATA.get(), level);
-        ResourceLocation pinataType = context.getItemInHand().get(ShopsDataComponents.PINATA_ID);
-        PinataData data = PinataLoader.getPinata(pinataType);
-        int color = data.mainColor();
+        CrateEntity crate = new CrateEntity(ShopsEntities.CRATE.get(), level);
+        ResourceLocation crateType = context.getItemInHand().get(ShopsDataComponents.CRATE_ID);
+        CrateData data = CrateLoader.getCrate(crateType);
 
 
         if (direction == Direction.UP) {
 
                 //Launch "Flare"
-                createFirework(level, color, exactPos);
+                createFirework(level, DyeColor.GRAY.getTextureDiffuseColor(), exactPos);
 
                 if (!context.getPlayer().isCreative()) {
                     context.getItemInHand().shrink(1);
                 };
 
-                //Schedule Pinata
+                //Schedule Crate
                 TickScheduler.schedule(level, 60 , () -> {
                     Vec3 spawnPos = exactPos.add(0, 50, 0);
                     Vec3 playerPos = context.getPlayer().position().add(0, context.getPlayer().getEyeHeight(), 0);
@@ -65,18 +60,13 @@ public class PinataFlareItem extends Item {
                     float yaw = (float) (Math.atan2(lookVec.z, lookVec.x) * (180 / Math.PI)) - 90f;
 
                     // Set absolute position and rotation
-                    pinata.absMoveTo(spawnPos.x, spawnPos.y, spawnPos.z, yaw, 0.0f);
+                    crate.absMoveTo(spawnPos.x, spawnPos.y, spawnPos.z, yaw, 0.0f);
 
-                    // Also set body/head rotation to make horse model face player
-                    pinata.yBodyRot = yaw;
-                    pinata.yHeadRot = yaw;
-                    pinata.yBodyRot = yaw;
+                    assert crateType != null;
+                    crate.setCrateType(crateType);
 
-                    assert pinataType != null;
-                    pinata.setPinataType(pinataType);
-
-                    level.addFreshEntity(pinata);
-                    level.playSound(null, pos, SoundEvents.FIREWORK_ROCKET_LAUNCH, pinata.getSoundSource(), 1.0f, 1.0f);
+                    level.addFreshEntity(crate);
+                    level.playSound(null, pos, SoundEvents.FIREWORK_ROCKET_LAUNCH, crate.getSoundSource(), 1.0f, 1.0f);
                 });
             }
 
@@ -86,12 +76,12 @@ public class PinataFlareItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> components, TooltipFlag flag) {
 
-        ResourceLocation pinataType = stack.get(ShopsDataComponents.PINATA_ID);
+        ResourceLocation crateType = stack.get(ShopsDataComponents.CRATE_ID);
 
-        assert pinataType != null;
+        assert crateType != null;
 
-        String path = pinataType.getPath();
-        components.add(Component.translatable("item.shops.pinata_flare." + path));
+        String path = crateType.getPath();
+        components.add(Component.translatable("item.shops.crate_flare." + path));
     }
 
     public void createFirework(Level level, int color, Vec3 position) {
@@ -107,9 +97,9 @@ public class PinataFlareItem extends Item {
         level.addFreshEntity(entity);
     }
 
-    public static ItemStack createPinataFlare(ResourceLocation path) {
-        ItemStack stack = new ItemStack(ShopsItems.PINATA_FLARE.get());
-        stack.set(ShopsDataComponents.PINATA_ID, path);
+    public static ItemStack createCrateFlare(ResourceLocation path) {
+        ItemStack stack = new ItemStack(ShopsItems.CRATE_FLARE.get());
+        stack.set(ShopsDataComponents.CRATE_ID, path);
         return stack;
     }
 }

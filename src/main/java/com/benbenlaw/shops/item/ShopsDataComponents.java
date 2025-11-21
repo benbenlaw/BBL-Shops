@@ -28,4 +28,8 @@ public class ShopsDataComponents {
             COMPONENTS.register("pinata_id", () ->
                     DataComponentType.<ResourceLocation>builder().persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC).build());
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ResourceLocation>> CRATE_ID =
+            COMPONENTS.register("crate_id", () ->
+                    DataComponentType.<ResourceLocation>builder().persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC).build());
+
 }

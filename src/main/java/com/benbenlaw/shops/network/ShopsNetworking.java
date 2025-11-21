@@ -14,6 +14,8 @@ public class ShopsNetworking {
         registrar.playToClient(SyncPlayerBalanceToClient.TYPE, SyncPlayerBalanceToClient.STREAM_CODEC, SyncPlayerBalanceToClient.HANDLER);
         registrar.playToClient(SyncAutoItemToClient.TYPE, SyncAutoItemToClient.STREAM_CODEC, SyncAutoItemToClient.HANDLER);
         registrar.playToClient(SyncShopRegistryToClient.TYPE, SyncShopRegistryToClient.STREAM_CODEC, SyncShopRegistryToClient.HANDLER);
+        registrar.playToClient(SyncCratesToClients.TYPE, SyncCratesToClients.STREAM_CODEC, SyncCratesToClients.HANDLER);
+        registrar.playToClient(SyncPinatasToClients.TYPE, SyncPinatasToClients.STREAM_CODEC, SyncPinatasToClients.HANDLER);
 
         //To Server From Client
         registrar.playToServer(SyncPurchaseToServer.TYPE, SyncPurchaseToServer.STREAM_CODEC, SyncPurchaseToServer.HANDLER);

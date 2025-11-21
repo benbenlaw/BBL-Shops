@@ -21,4 +21,11 @@ public class ShopsEntities {
                     .canSpawnFarFromPlayer()
                     .build(Shops.MOD_ID + ":pinata"));
 
+    public static final Supplier<EntityType<CrateEntity>> CRATE =
+            ENTITIES.register("crate", () -> EntityType.Builder.of(CrateEntity::new, MobCategory.MISC)
+                    .sized(1f, 1F)
+                    .clientTrackingRange(4)
+                    .updateInterval(10)
+                    .build(Shops.MOD_ID + ":crate"));
+
 }

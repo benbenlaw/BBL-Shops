@@ -1,6 +1,7 @@
 package com.benbenlaw.shops.item;
 
 import com.benbenlaw.shops.Shops;
+import com.benbenlaw.shops.loaders.CrateLoader;
 import com.benbenlaw.shops.loaders.PinataLoader;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -22,7 +23,7 @@ public class ShopsCreativeTab {
             .displayItems((parameters, output) -> {
 
                 ShopsItems.ITEMS.getEntries().forEach(entry -> {
-                    if (entry.get() != ShopsItems.PINATA_FLARE.get()) {
+                    if (entry.get() != ShopsItems.PINATA_FLARE.get() && entry.get() != ShopsItems.CRATE_FLARE.get()) {
                         output.accept(entry.get());
                     }
                 });
@@ -31,6 +32,12 @@ public class ShopsCreativeTab {
                     ItemStack stack = PinataFlareItem.createPinataFlare(pinataId);
                     output.accept(stack);
                 });
+
+                CrateLoader.getAllCrates().keySet().forEach(crateId -> {
+                    ItemStack stack = CrateFlareItem.createCrateFlare(crateId);
+                    output.accept(stack);
+                });
+
             })
             .build()
     );

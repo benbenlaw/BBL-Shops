@@ -3,7 +3,9 @@ package com.benbenlaw.shops.loaders;
 import com.benbenlaw.shops.util.ChanceResult;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
@@ -25,5 +27,13 @@ public record PinataData(int mainColor, ResourceLocation lootTable, ResourceLoca
             ResourceLocation.CODEC.fieldOf("loot_table").forGetter(PinataData::lootTable),
             ResourceLocation.CODEC.fieldOf("model").forGetter(PinataData::model)
     ).apply(inst, PinataData::new));
-    }
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, PinataData> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.INT, PinataData::mainColor,
+            ResourceLocation.STREAM_CODEC, PinataData::lootTable,
+            ResourceLocation.STREAM_CODEC, PinataData::model,
+            PinataData::new
+    );
+
+}
 

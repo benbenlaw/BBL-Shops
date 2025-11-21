@@ -3,6 +3,9 @@ package com.benbenlaw.shops.events;
 import com.benbenlaw.shops.Shops;
 import com.benbenlaw.shops.capability.PlayerBalanceData;
 import com.benbenlaw.shops.capability.ShopsAttachments;
+import com.benbenlaw.shops.loaders.CrateData;
+import com.benbenlaw.shops.loaders.CrateLoader;
+import com.benbenlaw.shops.loaders.PinataLoader;
 import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
 import com.benbenlaw.shops.loaders.CombinedShopLoader;
 import net.minecraft.server.level.ServerPlayer;
@@ -56,9 +59,13 @@ public class CapabilityEvent {
         if (event.getPlayer() == null) {
             for (ServerPlayer player : event.getPlayerList().getPlayers()) {
                 CombinedShopLoader.sendShopsPacketToPlayer(player);
+                CrateLoader.sendLoaderInformation(player);
+                PinataLoader.sendLoaderInformation(player);
             }
         } else {
             CombinedShopLoader.sendShopsPacketToPlayer(event.getPlayer());
+            CrateLoader.sendLoaderInformation(event.getPlayer());
+            PinataLoader.sendLoaderInformation(event.getPlayer());
         }
     }
 
