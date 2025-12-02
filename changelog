@@ -2,6 +2,10 @@
 
 reward crates use item crate drops from sky open crate when empty disappear
 
+1.3.1
+- Fixed shop menu shift clicking support being the worst shift clicking support known to mankind
+- Slots now use backlisting/ whitelisting to make placing items inside the shop quicker
+
 1.3.0
 - When a flare is used a firework is now fired up to the sky, after time the pinata spawns and drops, launch color is based on the color value in the pinata json file
 - Added Stream codec for pinatas,

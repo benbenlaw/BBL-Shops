@@ -3,11 +3,13 @@ package com.benbenlaw.shops.block.entity;
 import com.benbenlaw.shops.capability.PlayerBalanceData;
 import com.benbenlaw.shops.capability.ShopsAttachments;
 import com.benbenlaw.shops.item.ShopsDataComponents;
+import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.loaders.ShopEntry;
 import com.benbenlaw.shops.loaders.ShopRegistry;
 import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
 import com.benbenlaw.shops.screen.ShopMenu;
 import com.benbenlaw.shops.util.InputOutputItemHandler;
+import com.benbenlaw.shops.util.ShopsTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -40,11 +42,30 @@ public class ShopBlockEntity extends BlockEntity implements MenuProvider {
 
     public final ContainerData data;
     private final ItemStackHandler itemHandler = new ItemStackHandler(4) {
+
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
         }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot == PLAYER_BALANCE_CARD && stack.is(ShopsItems.PLAYER_BALANCE_CARD)) {
+                return true;
+            }
+            else if (slot == INPUT_SLOT && !stack.is(ShopsTags.Items.CATALOGS)) {
+                return true;
+            }
+            else if (slot == CATALOG && stack.is(ShopsTags.Items.CATALOGS)) {
+                return true;
+            }
+            else if (slot == OUTPUT_SLOT) {
+                return false;
+            }
+            return false;
+        }
     };
+
     public static final int PLAYER_BALANCE_CARD = 0;
     public static final int INPUT_SLOT = 1;
     public static final int CATALOG = 2;

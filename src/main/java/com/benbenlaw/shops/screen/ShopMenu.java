@@ -32,13 +32,15 @@ public class ShopMenu extends AbstractContainerMenu {
 
         assert blockEntity != null;
 
+        addPlayerInventory(inventory);
+        addPlayerHotbar(inventory);
+
         this.addSlot(new SlotItemHandler(blockEntity.getItemStackHandler(), ShopBlockEntity.PLAYER_BALANCE_CARD, 8, 16));
         this.addSlot(new SlotItemHandler(blockEntity.getItemStackHandler(), ShopBlockEntity.INPUT_SLOT, 8, 34));
         this.addSlot(new SlotItemHandler(blockEntity.getItemStackHandler(), ShopBlockEntity.CATALOG, 8, 52));
         this.addSlot(new SlotItemHandler(blockEntity.getItemStackHandler(), ShopBlockEntity.OUTPUT_SLOT, 152, 52));
 
-        addPlayerInventory(inventory);
-        addPlayerHotbar(inventory);
+
     }
 
     private static final int HOTBAR_SLOT_COUNT = 9;
@@ -83,6 +85,8 @@ public class ShopMenu extends AbstractContainerMenu {
         sourceSlot.onTake(playerIn, sourceStack);
         return copyOfSourceStack;
     }
+
+
 
     @Override
     public boolean stillValid(Player p_38874_) {

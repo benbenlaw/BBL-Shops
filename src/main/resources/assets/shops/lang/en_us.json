@@ -22,7 +22,7 @@
   "jei.shops.selling": "Player Sells",
   "jei.shops.buying": "Player Buys",
 
-  "block.shops.shop.player_balance_card": "Used for automatic payments",
+  "block.shops.shop.player_balance_card": "Insert Player Balance Card",
   "block.shops.shop.selling_input": "Selling Input",
   "block.shops.shop.catalog": "Insert Catalog",
   "block.shops.shop.output": "Shop Output",
