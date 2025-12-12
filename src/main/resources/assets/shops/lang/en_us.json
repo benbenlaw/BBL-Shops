@@ -30,6 +30,8 @@
 
   "entity.shops.pinata_interact": "Please don't hit me! I swear I'm Empty!",
   "entity.shops.pinata_hit": "I need some sort of stick or rod to break this open!",
+  "entity.shops.pinata": "Pinata",
+  "entity.shops.crate": "Crate",
 
   "sounds.shops.coin_collected": "Coin Collected"
 }
