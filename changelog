@@ -1,6 +1,7 @@
 //Changelog
 
-reward crates use item crate drops from sky open crate when empty disappear
+1.3.3
+- Tweak shop tooltip rendering to show all tooltips when hovering over an item in the shop, price moved to the end of the tooltip list
 
 1.3.2
 - Added entity translations
