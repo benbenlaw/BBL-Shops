@@ -1,5 +1,8 @@
 //Changelog
 
+1.3.4
+- Fixed the shop menu closing when pressing the close inventory key (default E)
+
 1.3.3
 - Tweak shop tooltip rendering to show all tooltips when hovering over an item in the shop, price moved to the end of the tooltip list
 

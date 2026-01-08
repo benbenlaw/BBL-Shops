@@ -204,6 +204,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         List<ShopEntry> items = getFilteredItems();
@@ -214,6 +215,23 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         scrollOffset -= deltaY; // scroll delta
         scrollOffset = Math.max(0, Math.min(scrollOffset, totalRows - maxVisibleRows));
         return true;
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+
+        if (this.searchBox != null && this.searchBox.isFocused()) {
+            assert minecraft != null;
+            if (minecraft.options.keyInventory.matches(key, scanCode)) {
+                return true;
+            }
+
+            if (this.searchBox.keyPressed(key, scanCode, modifiers)) {
+                return true;
+            }
+        }
+
+        return super.keyPressed(key, scanCode, modifiers);
     }
 
     public List<ShopEntry> getFilteredItems() {
