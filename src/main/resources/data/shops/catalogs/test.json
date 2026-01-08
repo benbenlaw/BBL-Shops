@@ -12,7 +12,6 @@
     { "stack": { "id": "minecraft:sand", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:red_sand", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:flint", "count": 1 }, "price": 200, "mode": "player_buys" },
-    { "stack": { "id": "minecraft:white_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:iron_ingot", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:copper_ingot", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:nether_star", "count": 1 }, "price": 100000, "mode": "player_buys" },
@@ -20,6 +19,22 @@
     { "stack": { "id": "minecraft:feather", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:egg", "count": 1 }, "price": 200, "mode": "player_buys" },
     { "stack": { "id": "minecraft:wooden_pickaxe", "count": 1 }, "price": 200, "mode": "player_buys" },
-    { "stack": { "id": "minecraft:iron_pickaxe", "count": 1 }, "price": 200, "mode": "player_buys" }
+    { "stack": { "id": "minecraft:iron_pickaxe", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:white_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:black_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:yellow_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:blue_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:gray_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:light_blue_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:light_gray_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:green_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:lime_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:cyan_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:brown_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:pink_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:purple_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:magenta_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:orange_wool", "count": 1 }, "price": 200, "mode": "player_buys" },
+    { "stack": { "id": "minecraft:red_wool", "count": 1 }, "price": 200, "mode": "player_buys" }
   ]
 }

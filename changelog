@@ -1,5 +1,9 @@
 //Changelog
 
+1.3.5
+- Scrolling now works when the search bar is filtering items
+- Right clicking on the search box now clears it
+
 1.3.4
 - Fixed the shop menu closing when pressing the close inventory key (default E)
 

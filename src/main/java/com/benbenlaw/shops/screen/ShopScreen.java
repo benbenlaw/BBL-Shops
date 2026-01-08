@@ -43,8 +43,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     private Button scrollUpButton;
     private Button scrollDownButton;
 
+    //Scroll and Search
     public ItemStack autoProduced;
     private EditBox searchBox;
+    private String lastSearch = "";
 
     public ShopScreen(ShopMenu menu, Inventory inventory, Component component) {
         super(menu, inventory, component);
@@ -164,6 +166,17 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+        if (this.searchBox != null && this.searchBox.isMouseOver(mouseX, mouseY)) {
+            if (button == 1) {
+                this.searchBox.setValue("");
+                this.searchBox.setFocused(true);
+                this.lastSearch = "";
+                this.scrollOffset = 0;
+                return true;
+            }
+        }
+
         for (DisplayedItem di : getVisibleItems()) {
             if (isMouseOver(mouseX, mouseY, di.x(), di.y(), 16, 16)) {
                 ShopEntry item = di.entry();
@@ -246,11 +259,18 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
                 .toList();
 
         if (searchBox != null && !searchBox.getValue().isEmpty()) {
-            scrollOffset = 0;
             String query = searchBox.getValue().toLowerCase(Locale.ROOT);
+
+            if (!query.equals(lastSearch)) {
+                scrollOffset = 0;
+                lastSearch = query;
+            }
+
             baseItems = baseItems.stream()
                     .filter(entry -> entry.getItem().getHoverName().getString().toLowerCase(Locale.ROOT).contains(query))
                     .toList();
+        } else {
+            lastSearch = "";
         }
 
         return baseItems;
