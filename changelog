@@ -1,5 +1,12 @@
 //Changelog
 
+
+1.3.7
+- Made commands not be able to use negative values
+
+1.3.6
+- Disabled testing recipes
+
 1.3.5
 - Scrolling now works when the search bar is filtering items
 - Right clicking on the search box now clears it
