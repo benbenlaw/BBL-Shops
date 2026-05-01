@@ -1,5 +1,8 @@
 //Changelog
 
+1.3.8
+- Fixed balance not being synced across dimensions
+- Catalogs when changed reset the scroll index now
 
 1.3.7
 - Made commands not be able to use negative values

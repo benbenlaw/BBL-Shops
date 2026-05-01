@@ -32,6 +32,17 @@ public class CapabilityEvent {
     }
 
     @SubscribeEvent
+    public static void syncPlayerBalance(PlayerEvent.PlayerChangedDimensionEvent event) {
+        Player player = event.getEntity();
+        Level level = player.level();
+
+        if (!level.isClientSide()) {
+            PlayerBalanceData data = player.getData(ShopsAttachments.PLAYER_BALANCE);
+            PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerBalanceToClient(data.getBalance()));
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerClone(PlayerEvent.Clone event) {
         if (event.isWasDeath()) {
             Player oldPlayer = event.getOriginal();

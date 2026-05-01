@@ -38,6 +38,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     private final int spacingY = 18;
     private final int maxVisibleRows = 2;
     private int scrollOffset = 0;
+    private boolean hadCatalog = false;
+
 
     //Buttons
     private Button scrollUpButton;
@@ -52,6 +54,20 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         super(menu, inventory, component);
         this.imageWidth = 176;
         this.imageHeight = 166;
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+
+        ItemStack catalogueStack = menu.blockEntity.getItemStackHandler().getStackInSlot(ShopBlockEntity.CATALOG);
+        boolean hasCatalog = !catalogueStack.isEmpty();
+
+        if (hasCatalog && !hadCatalog) {
+            scrollOffset = 0;
+        }
+
+        hadCatalog = hasCatalog;
     }
 
     @Override
