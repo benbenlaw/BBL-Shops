@@ -1,18 +1,18 @@
 package com.benbenlaw.shops.network.packets;
 
 import com.benbenlaw.shops.Shops;
-import com.benbenlaw.shops.capability.ShopsAttachments;
+import com.benbenlaw.shops.attachments.ShopsAttachments;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 public record SyncPlayerBalanceToClient(int balance) implements CustomPacketPayload {
 
-    public static final Type<SyncPlayerBalanceToClient> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Shops.MOD_ID, "sync_player_balance_to_client"));
+    public static final Type<SyncPlayerBalanceToClient> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Shops.MOD_ID, "sync_player_balance_to_client"));
 
     public static final IPayloadHandler<SyncPlayerBalanceToClient> HANDLER = (packet, context) -> {
         Player player = context.player();

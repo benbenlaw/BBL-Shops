@@ -1,0 +1,7 @@
+// 26.1.2	2026-07-02T14:38:28.7588656	Model Definitions - shops
+ba1b45ad19cd4717c549708e2766709b9b33c0dc assets/shops/items/copper_coin.json
+caca87bccbfedc6e6f051648d204a9bc195ffabb assets/shops/items/gold_coin.json
+ac34fb487ff338666959971e6b1265d3f4be35d0 assets/shops/items/iron_coin.json
+20b147adb8b48203da243ce926414c10448c92a5 assets/shops/models/item/copper_coin.json
+92769a699ca4938d63b1d70aa915480dc2c20a54 assets/shops/models/item/gold_coin.json
+7645280627d89b7f67d634a6352d96390eabb2f8 assets/shops/models/item/iron_coin.json

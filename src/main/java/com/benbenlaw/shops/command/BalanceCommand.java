@@ -1,6 +1,7 @@
 package com.benbenlaw.shops.command;
 
-import com.benbenlaw.shops.capability.ShopsAttachments;
+import com.benbenlaw.shops.attachments.PlayerBalanceData;
+import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
@@ -9,6 +10,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -17,9 +19,8 @@ public class BalanceCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("player_balance")
 
-                // ADD
                 .then(Commands.literal("add")
-                        .requires(source -> source.hasPermission(4))
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                         .executes(ctx -> addBalance(
@@ -31,9 +32,8 @@ public class BalanceCommand {
                         )
                 )
 
-                // REMOVE
                 .then(Commands.literal("remove")
-                        .requires(source -> source.hasPermission(4))
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                         .executes(ctx -> removeBalance(
@@ -45,9 +45,8 @@ public class BalanceCommand {
                         )
                 )
 
-                // SET
                 .then(Commands.literal("set")
-                        .requires(source -> source.hasPermission(4))
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(0))
                                         .executes(ctx -> setBalance(
@@ -59,7 +58,6 @@ public class BalanceCommand {
                         )
                 )
 
-                // TRANSFER
                 .then(Commands.literal("transfer")
                         .then(Commands.argument("to_player", EntityArgument.player())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1))
@@ -75,69 +73,52 @@ public class BalanceCommand {
     }
 
     private static int addBalance(CommandContext<CommandSourceStack> ctx, ServerPlayer player, int amount) {
-        player.getData(ShopsAttachments.PLAYER_BALANCE.get()).addBalance(amount);
+        PlayerBalanceData updated = player.getData(ShopsAttachments.PLAYER_BALANCE.get()).addBalance(amount);
+        player.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
 
         ctx.getSource().sendSuccess(
-                () -> net.minecraft.network.chat.Component.literal(
-                        "Added " + amount + " to " + player.getName().getString()
-                ),
+                () -> Component.literal("Added " + amount + " to " + player.getName().getString()),
                 true
         );
 
-        PacketDistributor.sendToPlayer(player,
-                new SyncPlayerBalanceToClient(
-                        player.getData(ShopsAttachments.PLAYER_BALANCE.get()).getBalance()
-                )
-        );
+        PacketDistributor.sendToPlayer(player, new SyncPlayerBalanceToClient(updated.getBalance()));
 
         return Command.SINGLE_SUCCESS;
     }
 
     private static int removeBalance(CommandContext<CommandSourceStack> ctx, ServerPlayer player, int amount) {
-        int balance = player.getData(ShopsAttachments.PLAYER_BALANCE.get()).getBalance();
+        PlayerBalanceData current = player.getData(ShopsAttachments.PLAYER_BALANCE.get());
 
-        if (balance < amount) {
+        if (current.getBalance() < amount) {
             ctx.getSource().sendFailure(
-                    net.minecraft.network.chat.Component.literal(
-                            player.getName().getString() + " does not have enough balance."
-                    )
+                    Component.literal(player.getName().getString() + " does not have enough balance.")
             );
             return 0;
         }
 
-        player.getData(ShopsAttachments.PLAYER_BALANCE.get()).subtractBalance(amount);
+        PlayerBalanceData updated = current.subtractBalance(amount);
+        player.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
 
         ctx.getSource().sendSuccess(
-                () -> net.minecraft.network.chat.Component.literal(
-                        "Removed " + amount + " from " + player.getName().getString()
-                ),
+                () -> Component.literal("Removed " + amount + " from " + player.getName().getString()),
                 true
         );
 
-        PacketDistributor.sendToPlayer(player,
-                new SyncPlayerBalanceToClient(
-                        player.getData(ShopsAttachments.PLAYER_BALANCE.get()).getBalance()
-                )
-        );
+        PacketDistributor.sendToPlayer(player, new SyncPlayerBalanceToClient(updated.getBalance()));
 
         return Command.SINGLE_SUCCESS;
     }
 
     private static int setBalance(CommandContext<CommandSourceStack> ctx, ServerPlayer player, int amount) {
-        player.getData(ShopsAttachments.PLAYER_BALANCE.get()).setBalance(amount);
+        PlayerBalanceData updated = player.getData(ShopsAttachments.PLAYER_BALANCE.get()).setBalance(amount);
+        player.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
 
         ctx.getSource().sendSuccess(
-                () -> net.minecraft.network.chat.Component.literal(
-                        "Set " + player.getName().getString() + "'s balance to " + amount
-                ),
+                () -> Component.literal("Set " + player.getName().getString() + "'s balance to " + amount),
                 true
         );
 
-        PacketDistributor.sendToPlayer(player,
-                new SyncPlayerBalanceToClient(
-                        player.getData(ShopsAttachments.PLAYER_BALANCE.get()).getBalance()
-                )
-        );
+        PacketDistributor.sendToPlayer(player, new SyncPlayerBalanceToClient(updated.getBalance()));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -148,48 +129,31 @@ public class BalanceCommand {
         if (fromPlayer == null) return 0;
 
         if (fromPlayer.equals(toPlayer)) {
-            ctx.getSource().sendFailure(
-                    net.minecraft.network.chat.Component.literal(
-                            "You cannot transfer balance to yourself."
-                    )
-            );
+            ctx.getSource().sendFailure(Component.literal("You cannot transfer balance to yourself."));
             return 0;
         }
 
-        int fromBalance = fromPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get()).getBalance();
+        PlayerBalanceData fromData = fromPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get());
 
-        if (fromBalance < amount) {
-            ctx.getSource().sendFailure(
-                    net.minecraft.network.chat.Component.literal(
-                            "You do not have enough balance to transfer " + amount
-                    )
-            );
+        if (fromData.getBalance() < amount) {
+            ctx.getSource().sendFailure(Component.literal("You do not have enough balance to transfer " + amount));
             return 0;
         }
 
-        fromPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get()).subtractBalance(amount);
-        toPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get()).addBalance(amount);
+        PlayerBalanceData fromUpdated = fromData.subtractBalance(amount);
+        PlayerBalanceData toUpdated = toPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get()).addBalance(amount);
+
+        fromPlayer.setData(ShopsAttachments.PLAYER_BALANCE.get(), fromUpdated);
+        toPlayer.setData(ShopsAttachments.PLAYER_BALANCE.get(), toUpdated);
 
         ctx.getSource().sendSuccess(
-                () -> net.minecraft.network.chat.Component.literal(
-                        "Transferred " + amount + " from " +
-                                fromPlayer.getName().getString() + " to " +
-                                toPlayer.getName().getString()
-                ),
+                () -> Component.literal("Transferred " + amount + " from " +
+                        fromPlayer.getName().getString() + " to " + toPlayer.getName().getString()),
                 true
         );
 
-        PacketDistributor.sendToPlayer(fromPlayer,
-                new SyncPlayerBalanceToClient(
-                        fromPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get()).getBalance()
-                )
-        );
-
-        PacketDistributor.sendToPlayer(toPlayer,
-                new SyncPlayerBalanceToClient(
-                        toPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get()).getBalance()
-                )
-        );
+        PacketDistributor.sendToPlayer(fromPlayer, new SyncPlayerBalanceToClient(fromUpdated.getBalance()));
+        PacketDistributor.sendToPlayer(toPlayer, new SyncPlayerBalanceToClient(toUpdated.getBalance()));
 
         return Command.SINGLE_SUCCESS;
     }

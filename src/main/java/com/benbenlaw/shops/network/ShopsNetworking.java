@@ -1,7 +1,9 @@
 package com.benbenlaw.shops.network;
 
 import com.benbenlaw.shops.Shops;
-import com.benbenlaw.shops.network.packets.*;
+import com.benbenlaw.shops.network.packets.BuyShopItem;
+import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
+import com.benbenlaw.shops.network.packets.SyncShopEntriesToClient;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
@@ -12,14 +14,11 @@ public class ShopsNetworking {
 
         //To Client From Server
         registrar.playToClient(SyncPlayerBalanceToClient.TYPE, SyncPlayerBalanceToClient.STREAM_CODEC, SyncPlayerBalanceToClient.HANDLER);
-        registrar.playToClient(SyncAutoItemToClient.TYPE, SyncAutoItemToClient.STREAM_CODEC, SyncAutoItemToClient.HANDLER);
-        registrar.playToClient(SyncShopRegistryToClient.TYPE, SyncShopRegistryToClient.STREAM_CODEC, SyncShopRegistryToClient.HANDLER);
-        registrar.playToClient(SyncCratesToClients.TYPE, SyncCratesToClients.STREAM_CODEC, SyncCratesToClients.HANDLER);
-        registrar.playToClient(SyncPinatasToClients.TYPE, SyncPinatasToClients.STREAM_CODEC, SyncPinatasToClients.HANDLER);
+        registrar.playToClient(SyncShopEntriesToClient.TYPE, SyncShopEntriesToClient.STREAM_CODEC, SyncShopEntriesToClient.HANDLER);
 
         //To Server From Client
-        registrar.playToServer(SyncPurchaseToServer.TYPE, SyncPurchaseToServer.STREAM_CODEC, SyncPurchaseToServer.HANDLER);
-        registrar.playToServer(SyncAutoItemToServer.TYPE, SyncAutoItemToServer.STREAM_CODEC, SyncAutoItemToServer.HANDLER);
+        registrar.playToServer(BuyShopItem.TYPE, BuyShopItem.STREAM_CODEC, BuyShopItem.HANDLER);
+
 
 
     }

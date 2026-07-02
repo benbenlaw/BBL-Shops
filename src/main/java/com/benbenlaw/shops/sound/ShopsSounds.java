@@ -2,7 +2,7 @@ package com.benbenlaw.shops.sound;
 
 import com.benbenlaw.shops.Shops;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -16,7 +16,7 @@ public class ShopsSounds {
     public static final Supplier<SoundEvent> COIN_COLLECTED = registerSoundEvent("coin_collected");
 
     private static Supplier<SoundEvent> registerSoundEvent(String name) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Shops.MOD_ID, name);
+        Identifier id = Shops.identifier(name);
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(id));
     }
 }

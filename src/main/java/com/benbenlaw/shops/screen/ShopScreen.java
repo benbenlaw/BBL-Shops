@@ -1,324 +1,340 @@
 package com.benbenlaw.shops.screen;
 
 import com.benbenlaw.shops.Shops;
-import com.benbenlaw.shops.block.entity.ShopBlockEntity;
-import com.benbenlaw.shops.capability.PlayerBalanceData;
-import com.benbenlaw.shops.capability.ShopsAttachments;
-import com.benbenlaw.shops.loaders.ShopEntry;
-import com.benbenlaw.shops.loaders.ShopRegistry;
-import com.benbenlaw.shops.network.packets.SyncAutoItemToServer;
-import com.benbenlaw.shops.network.packets.SyncPurchaseToServer;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import com.benbenlaw.shops.attachments.PlayerBalanceData;
+import com.benbenlaw.shops.attachments.ShopsAttachments;
+import com.benbenlaw.shops.item.ShopsItems;
+import com.benbenlaw.shops.network.packets.BuyShopItem;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.world.item.TooltipFlag;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Set;
 
-public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
+public class ShopScreen extends Screen {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Shops.MOD_ID, "textures/gui/shop_gui.png");
+    private static final int ITEM_BOX_SIZE = 34;
+    private static final int ITEM_ICON_SCALE = 2;
+    private static final int BUY_BUTTON_HEIGHT = 14;
+    private static final int SLOT_SPACING = 4;
+    private static final int SLOT_WIDTH = ITEM_BOX_SIZE + SLOT_SPACING;
+    private static final int SLOT_HEIGHT = ITEM_BOX_SIZE + BUY_BUTTON_HEIGHT + SLOT_SPACING + 2;
 
-    // Grid settings
-    private final int columns = 6;
-    private final int startX = 28;
-    private final int startY = 34;
-    private final int spacingX = 18;
-    private final int spacingY = 18;
-    private final int maxVisibleRows = 2;
+    private static final int TIER_HEADER_HEIGHT = 18;
+    private static final int TIER_SPACING = 10;
+
+    private static final int MIN_COLUMNS = 4;
+    private static final int MAX_COLUMNS = 12;
+    private static final int MIN_VIEWPORT_ROWS = 2;
+    private static final int MAX_VIEWPORT_ROWS = 6;
+
+    private static final int PANEL_MARGIN = 10;
+    private static final int TITLE_HEIGHT = 20;
+    private static final int FOOTER_HEIGHT = 26;
+    private static final int SCREEN_PADDING = 20;
+    private static final int SCROLLBAR_WIDTH = 4;
+
+    private static final int PANEL_BACKGROUND = 0xFF1E1E1E;
+    private static final int PANEL_BORDER = 0xFF444444;
+    private static final int BOX_BACKGROUND = 0xFF2B2B2B;
+    private static final int BOX_BORDER = 0xFF555555;
+    private static final int BUY_BUTTON_COLOR = 0xFF3A8F3A;
+    private static final int BUY_BUTTON_HOVER_COLOR = 0xFF4CAF50;
+    private static final int BUY_BUTTON_BORDER = 0xFF1F5C1F;
+    private static final int BUY_BUTTON_DISABLED_COLOR = 0xFF4A2E2E;
+    private static final int BUY_BUTTON_DISABLED_BORDER = 0xFF6B3B3B;
+    private static final int PRICE_UNAFFORDABLE_COLOR = 0xFFFF5555;
+    private static final int TIER_HEADER_COLOR = 0xFFFFD700;
+    private static final int SCROLLBAR_TRACK_COLOR = 0xFF141414;
+    private static final int SCROLLBAR_THUMB_COLOR = 0xFF777777;
+
+    private final List<ShopEntry> allEntries;
+    private List<ShopEntry> filteredEntries;
+
+    private String searchText = "";
     private int scrollOffset = 0;
-    private boolean hadCatalog = false;
 
+    private int gridColumns;
+    private int gridViewportHeight;
+    private int panelX;
+    private int panelY;
+    private int panelWidth;
+    private int panelHeight;
+    private int gridX;
+    private int gridY;
 
-    //Buttons
-    private Button scrollUpButton;
-    private Button scrollDownButton;
+    private final List<PlacedHeader> placedHeaders = new ArrayList<>();
+    private final List<PlacedItem> placedItems = new ArrayList<>();
+    private int totalContentHeight = 0;
 
-    //Scroll and Search
-    public ItemStack autoProduced;
-    private EditBox searchBox;
-    private String lastSearch = "";
-
-    public ShopScreen(ShopMenu menu, Inventory inventory, Component component) {
-        super(menu, inventory, component);
-        this.imageWidth = 176;
-        this.imageHeight = 166;
-    }
-
-    @Override
-    protected void containerTick() {
-        super.containerTick();
-
-        ItemStack catalogueStack = menu.blockEntity.getItemStackHandler().getStackInSlot(ShopBlockEntity.CATALOG);
-        boolean hasCatalog = !catalogueStack.isEmpty();
-
-        if (hasCatalog && !hadCatalog) {
-            scrollOffset = 0;
-        }
-
-        hadCatalog = hasCatalog;
+    public ShopScreen(Component title, List<ShopEntry> entries) {
+        super(title);
+        this.allEntries = entries;
+        this.filteredEntries = entries;
     }
 
     @Override
     protected void init() {
         super.init();
 
-        this.autoProduced = menu.blockEntity.getAutoProduced();
+        int availableWidth = Math.max(width - SCREEN_PADDING * 2, SLOT_WIDTH * MIN_COLUMNS);
+        int availableHeight = Math.max(height - SCREEN_PADDING * 2, SLOT_HEIGHT * MIN_VIEWPORT_ROWS + TITLE_HEIGHT + FOOTER_HEIGHT);
 
-        // Search bar
-        this.searchBox = new EditBox(this.font, leftPos + 34, topPos + 17, 108, 12, Component.literal("Search"));
-        this.searchBox.setMaxLength(50);
-        this.searchBox.setBordered(true);
-        this.searchBox.setVisible(true);
-        this.searchBox.setTextColor(0xFFFFFF);
-        this.addRenderableWidget(this.searchBox);
+        gridColumns = Mth.clamp((availableWidth - PANEL_MARGIN * 2) / SLOT_WIDTH, MIN_COLUMNS, MAX_COLUMNS);
+        int viewportRows = Mth.clamp((availableHeight - PANEL_MARGIN * 2 - TITLE_HEIGHT - FOOTER_HEIGHT) / SLOT_HEIGHT, MIN_VIEWPORT_ROWS, MAX_VIEWPORT_ROWS);
 
-        int buttonX = leftPos + 137;
-        int scrollUpY = topPos + 36;
-        int scrollDownY = topPos + 55;
+        panelWidth = gridColumns * SLOT_WIDTH - SLOT_SPACING + PANEL_MARGIN * 2;
+        panelHeight = viewportRows * SLOT_HEIGHT - SLOT_SPACING + PANEL_MARGIN * 2 + TITLE_HEIGHT + FOOTER_HEIGHT;
 
-        scrollUpButton = Button.builder(Component.literal("▲"), button -> {
-            if (scrollOffset > 0) {
-                scrollOffset--;
-            }
-        }).bounds(buttonX, scrollUpY, 12, 12).build();
+        panelX = (width - panelWidth) / 2;
+        panelY = (height - panelHeight) / 2;
 
-        scrollDownButton = Button.builder(Component.literal("▼"), button -> {
-            List<ShopEntry> items = getFilteredItems();
-            int totalRows = (int) Math.ceil(items.size() / (double) columns);
-            if (scrollOffset < totalRows - maxVisibleRows) {
-                scrollOffset++;
-            }
-        }).bounds(buttonX, scrollDownY, 12, 12).build();
+        gridX = panelX + PANEL_MARGIN;
+        gridY = panelY + PANEL_MARGIN + TITLE_HEIGHT;
+        gridViewportHeight = viewportRows * SLOT_HEIGHT - SLOT_SPACING;
 
-        this.addRenderableWidget(scrollUpButton);
-        this.addRenderableWidget(scrollDownButton);
+        int footerY = panelY + panelHeight - FOOTER_HEIGHT - 3;
+        EditBox searchBox = new EditBox(Minecraft.getInstance().font,
+                panelX + PANEL_MARGIN, footerY, panelWidth - PANEL_MARGIN * 2, 20, Component.literal("Search"));
+        searchBox.setTooltip(Tooltip.create(Component.translatable("tooltip.shops.search_bar")));
+        searchBox.setResponder(this::onSearchChanged);
+        addRenderableWidget(searchBox);
 
+        rebuildLayout();
     }
 
-    @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
-        graphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
-
-        for (DisplayedItem di : getVisibleItems()) {
-            graphics.renderItem(di.entry().getItem(), di.x(), di.y());
-            graphics.renderItemDecorations(font, di.entry().getItem(), di.x(), di.y());
-        }
-    }
-
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.render(graphics, mouseX, mouseY, partialTicks);
-        renderTooltip(graphics, mouseX, mouseY);
-        searchBox.render(graphics, mouseX, mouseY, partialTicks);
-
-        for (DisplayedItem di : getVisibleItems()) {
-            if (isMouseOver(mouseX, mouseY, di.x(), di.y(), 16, 16)) {
-
-                List<Component> fullTooltip = di.entry.getItem().getTooltipLines(Item.TooltipContext.EMPTY, menu.player, TooltipFlag.NORMAL );
-
-                fullTooltip.add(Component.literal("Price: " + di.entry().getPrice() + " coins").withStyle(ChatFormatting.GOLD));
-
-                graphics.renderTooltip(font, fullTooltip, Optional.empty(), mouseX, mouseY);
-            }
-        }
-
-        int totalRows = (int) Math.ceil(getFilteredItems().size() / (double) columns);
-        boolean canScroll = totalRows > maxVisibleRows;
-
-        scrollUpButton.visible = canScroll;
-        scrollDownButton.visible = canScroll;
-
-
-        renderAutoProducedItem(graphics, mouseX, mouseY);
-        renderSlotTooltips(graphics, mouseX, mouseY, leftPos, topPos);
-    }
-
-    private void renderSlotTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y) {
-        List<TooltipArea> tooltipAreas = List.of(
-                new TooltipArea(8, 16, 16, 16, "block.shops.shop.player_balance_card"),
-                new TooltipArea(8, 34, 16, 16, "block.shops.shop.selling_input"),
-                new TooltipArea(8, 52, 16, 16, "block.shops.shop.catalog"),
-                new TooltipArea(152, 52, 16, 16, "block.shops.shop.output")
-        );
-
-        for (TooltipArea area : tooltipAreas) {
-            if (isMouseAboveArea(mouseX, mouseY, x, y, area.offsetX, area.offsetY, area.width, area.height)) {
-                if (this.menu.getCarried().isEmpty() && this.hoveredSlot != null && !this.hoveredSlot.hasItem()) {
-                    guiGraphics.renderTooltip(this.font, Component.translatable(area.translationKey), mouseX, mouseY);
-                }
-            }
-        }
-
-        if (autoProduced.isEmpty()) {
-            if (isMouseAboveArea(mouseX, mouseY, x, y, 152, 34, 16, 16)) {
-                guiGraphics.renderTooltip(this.font, Component.translatable("block.shops.shop.auto_produce"), mouseX, mouseY);
-            }
-        }
-    }
-
-    private void renderAutoProducedItem(GuiGraphics graphics, int mouseX, int mouseY) {
-        if (!autoProduced.isEmpty()) {
-            int x = leftPos + 152;
-            int y = topPos + 34;
-            graphics.renderItem(autoProduced, x, y);
-
-            if (isMouseOver(mouseX, mouseY, x, y, 16, 16)) {
-                graphics.renderTooltip(font, Component.literal("Auto Produce: " + autoProduced.getHoverName().getString()), mouseX, mouseY);
-            }
-        }
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-
-        if (this.searchBox != null && this.searchBox.isMouseOver(mouseX, mouseY)) {
-            if (button == 1) {
-                this.searchBox.setValue("");
-                this.searchBox.setFocused(true);
-                this.lastSearch = "";
-                this.scrollOffset = 0;
-                return true;
-            }
-        }
-
-        for (DisplayedItem di : getVisibleItems()) {
-            if (isMouseOver(mouseX, mouseY, di.x(), di.y(), 16, 16)) {
-                ShopEntry item = di.entry();
-
-                if (button == 0) {
-                    PlayerBalanceData balance = menu.player.getData(ShopsAttachments.PLAYER_BALANCE);
-                    if (balance == null) return super.mouseClicked(mouseX, mouseY, button);
-
-                    if (balance.getBalance() >= item.getPrice()) {
-                        int newBalance = balance.getBalance() - item.getPrice();
-                        balance.setBalance(newBalance);
-                        menu.player.getInventory().add(item.getItem().copy());
-                        PacketDistributor.sendToServer(new SyncPurchaseToServer(newBalance, item.getItem().copy()));
-                    } else {
-                        menu.player.sendSystemMessage(Component.literal("Not enough balance!"));
-                    }
-                } else if (button == 1) {
-                    if (autoProduced != null && ItemStack.isSameItem(autoProduced, item.getItem())) {
-                        autoProduced = ItemStack.EMPTY;
-                    } else {
-                        autoProduced = item.getItem().copy();
-                    }
-                    PacketDistributor.sendToServer(new SyncAutoItemToServer(menu.blockPos, autoProduced.copy()));
-                }
-
-                return true;
-            }
-
-            if (isMouseOver(mouseX, mouseY, leftPos + 152, topPos + 34, 16, 16) && !autoProduced.isEmpty()) {
-                if (button == 0 || button == 1) {
-                    autoProduced = ItemStack.EMPTY;
-                    PacketDistributor.sendToServer(new SyncAutoItemToServer(menu.blockPos, autoProduced.copy()));
-                    return true;
-                }
-            }
-        }
-
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
-        List<ShopEntry> items = getFilteredItems();
-        int totalRows = (int) Math.ceil(items.size() / (double) columns);
-
-        if (totalRows <= maxVisibleRows) return false;
-
-        scrollOffset -= deltaY; // scroll delta
-        scrollOffset = Math.max(0, Math.min(scrollOffset, totalRows - maxVisibleRows));
-        return true;
-    }
-
-    @Override
-    public boolean keyPressed(int key, int scanCode, int modifiers) {
-
-        if (this.searchBox != null && this.searchBox.isFocused()) {
-            assert minecraft != null;
-            if (minecraft.options.keyInventory.matches(key, scanCode)) {
-                return true;
-            }
-
-            if (this.searchBox.keyPressed(key, scanCode, modifiers)) {
-                return true;
-            }
-        }
-
-        return super.keyPressed(key, scanCode, modifiers);
-    }
-
-    public List<ShopEntry> getFilteredItems() {
-        ItemStack catalogueStack = menu.blockEntity.getItemStackHandler().getStackInSlot(ShopBlockEntity.CATALOG);
-
-        List<ShopEntry> baseItems = !catalogueStack.isEmpty()
-                ? ShopRegistry.getByCatalog(catalogueStack)
-                : List.of();
-
-        baseItems = baseItems.stream()
-                .filter(entry -> entry.getMode() == ShopEntry.ShopMode.PLAYER_BUYS)
+    private void onSearchChanged(String value) {
+        searchText = value.toLowerCase();
+        filteredEntries = searchText.isEmpty()
+                ? allEntries
+                : allEntries.stream()
+                .filter(entry -> entry.stack().getHoverName().getString().toLowerCase().contains(searchText))
                 .toList();
+        scrollOffset = 0;
+        rebuildLayout();
+    }
 
-        if (searchBox != null && !searchBox.getValue().isEmpty()) {
-            String query = searchBox.getValue().toLowerCase(Locale.ROOT);
+    private void rebuildLayout() {
+        placedHeaders.clear();
+        placedItems.clear();
 
-            if (!query.equals(lastSearch)) {
-                scrollOffset = 0;
-                lastSearch = query;
+        Player player = Minecraft.getInstance().player;
+        Set<String> unlocked = player != null
+                ? Set.of(player.getData(ShopsAttachments.PLAYER_BALANCE).stages())
+                : Set.of();
+
+        Map<String, List<ShopEntry>> byTier = new LinkedHashMap<>();
+        for (ShopEntry entry : filteredEntries) {
+            if (!entry.tier().isEmpty() && !unlocked.contains(entry.tier())) continue;
+            byTier.computeIfAbsent(entry.tier(), t -> new ArrayList<>()).add(entry);
+        }
+
+        int currentY = 0;
+        for (Map.Entry<String, List<ShopEntry>> tierGroup : byTier.entrySet()) {
+            String tier = tierGroup.getKey();
+            List<ShopEntry> entries = tierGroup.getValue();
+
+            String namespace = entries.get(0).namespace(); // namespace of the addon that defined this tier group
+            Component headerText = Component.translatable("shop_tier." + namespace + "." + (tier.isEmpty() ? "general" : tier));
+            placedHeaders.add(new PlacedHeader(headerText, currentY));
+            currentY += TIER_HEADER_HEIGHT;
+
+            for (int i = 0; i < entries.size(); i++) {
+                int col = i % gridColumns;
+                int row = i / gridColumns;
+                int itemX = col * SLOT_WIDTH;
+                int itemY = currentY + row * SLOT_HEIGHT;
+                placedItems.add(new PlacedItem(entries.get(i), itemX, itemY));
             }
-
-            baseItems = baseItems.stream()
-                    .filter(entry -> entry.getItem().getHoverName().getString().toLowerCase(Locale.ROOT).contains(query))
-                    .toList();
-        } else {
-            lastSearch = "";
+            int rowCount = (entries.size() + gridColumns - 1) / gridColumns;
+            currentY += rowCount * SLOT_HEIGHT + TIER_SPACING;
         }
 
-        return baseItems;
+        totalContentHeight = currentY;
+        scrollOffset = Mth.clamp(scrollOffset, 0, maxScroll());
     }
 
-    private List<DisplayedItem> getVisibleItems() {
-        List<DisplayedItem> visible = new ArrayList<>();
-        List<ShopEntry> items = getFilteredItems();
+    private int maxScroll() {
+        return Math.max(0, totalContentHeight - gridViewportHeight);
+    }
 
-        for (int i = 0; i < items.size(); i++) {
-            int col = i % columns;
-            int row = i / columns;
+    @Override
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractBackground(graphics, mouseX, mouseY, delta);
+        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, PANEL_BACKGROUND);
+        graphics.outline(panelX, panelY, panelWidth, panelHeight, PANEL_BORDER);
+    }
 
-            if (row < scrollOffset) continue;
-            if (row >= scrollOffset + maxVisibleRows) continue;
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-            int x = leftPos + startX + col * spacingX;
-            int y = topPos + startY + (row - scrollOffset) * spacingY;
-            visible.add(new DisplayedItem(items.get(i), x, y));
+        graphics.text(Minecraft.getInstance().font, Component.translatable("menu.shops.shop"),
+                panelX + PANEL_MARGIN, panelY + 8, 0xFFFFFFFF, true);
+
+        Player player = Minecraft.getInstance().player;
+        int playerBalance = player != null ? player.getData(ShopsAttachments.PLAYER_BALANCE).getBalance() : 0;
+
+        // --- balance display, top-right of the panel ---
+        Component balanceText = Component.translatable("tooltip.shops.balance", playerBalance);
+        int balanceTextWidth = Minecraft.getInstance().font.width(balanceText);
+        int balanceIconWidth = 16;
+        int balanceGroupWidth = balanceIconWidth + 4 + balanceTextWidth;
+
+        int balanceX = panelX + panelWidth - PANEL_MARGIN - balanceGroupWidth;
+        int balanceIconY = panelY + 4;
+
+        graphics.item(ShopsItems.GOLD_COIN.get().getDefaultInstance(), balanceX, balanceIconY);
+        graphics.text(Minecraft.getInstance().font, balanceText,
+                balanceX + balanceIconWidth + 4, panelY + 8, 0xFFFFFFFF, true);
+
+        int viewportTop = gridY;
+        int viewportBottom = gridY + gridViewportHeight;
+        graphics.enableScissor(gridX, viewportTop, gridX + gridColumns * SLOT_WIDTH, viewportBottom);
+
+        for (PlacedHeader header : placedHeaders) {
+            int screenY = gridY + header.y() - scrollOffset;
+            if (screenY + TIER_HEADER_HEIGHT < viewportTop || screenY > viewportBottom) continue;
+            graphics.text(Minecraft.getInstance().font, header.text(), gridX, screenY + 4, TIER_HEADER_COLOR, true);
         }
 
-        return visible;
+        ShopEntry hoveredBox = null;
+
+        for (PlacedItem placed : placedItems) {
+            int boxX = gridX + placed.x();
+            int boxY = gridY + placed.y() - scrollOffset;
+            int buttonX = boxX;
+            int buttonY = boxY + ITEM_BOX_SIZE + SLOT_SPACING;
+            int buttonWidth = ITEM_BOX_SIZE;
+
+            if (boxY + SLOT_HEIGHT < viewportTop || boxY > viewportBottom) continue;
+
+            boolean boxHovered = mouseX >= boxX && mouseX < boxX + ITEM_BOX_SIZE
+                    && mouseY >= boxY && mouseY < boxY + ITEM_BOX_SIZE
+                    && mouseY >= viewportTop && mouseY < viewportBottom;
+            boolean buttonHovered = mouseX >= buttonX && mouseX < buttonX + buttonWidth
+                    && mouseY >= buttonY && mouseY < buttonY + BUY_BUTTON_HEIGHT
+                    && mouseY >= viewportTop && mouseY < viewportBottom;
+
+            boolean canAfford = playerBalance >= placed.entry().buyPrice();
+
+            graphics.fill(boxX, boxY, boxX + ITEM_BOX_SIZE, boxY + ITEM_BOX_SIZE, BOX_BACKGROUND);
+            graphics.outline(boxX, boxY, ITEM_BOX_SIZE, ITEM_BOX_SIZE, BOX_BORDER);
+
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(boxX + ITEM_BOX_SIZE / 2f, boxY + ITEM_BOX_SIZE / 2f);
+            graphics.pose().scale(ITEM_ICON_SCALE, ITEM_ICON_SCALE);
+            graphics.item(placed.entry().stack(), -8, -8);
+            graphics.pose().popMatrix();
+
+            int buttonColor = !canAfford
+                    ? BUY_BUTTON_DISABLED_COLOR
+                    : (buttonHovered ? BUY_BUTTON_HOVER_COLOR : BUY_BUTTON_COLOR);
+            int buttonBorder = !canAfford ? BUY_BUTTON_DISABLED_BORDER : BUY_BUTTON_BORDER;
+            int priceColor = canAfford ? 0xFFFFFFFF : PRICE_UNAFFORDABLE_COLOR;
+
+            graphics.fill(buttonX, buttonY, buttonX + buttonWidth, buttonY + BUY_BUTTON_HEIGHT, buttonColor);
+            graphics.outline(buttonX, buttonY, buttonWidth, BUY_BUTTON_HEIGHT, buttonBorder);
+            graphics.centeredText(Minecraft.getInstance().font, Component.literal(String.valueOf(placed.entry().buyPrice())),
+                    buttonX + buttonWidth / 2, buttonY + 3, priceColor);
+
+            if (boxHovered) {
+                hoveredBox = placed.entry();
+            }
+        }
+
+        graphics.disableScissor();
+
+        if (maxScroll() > 0) {
+            int trackX = gridX + gridColumns * SLOT_WIDTH - SLOT_SPACING + 4;
+            graphics.fill(trackX, viewportTop, trackX + SCROLLBAR_WIDTH, viewportBottom, SCROLLBAR_TRACK_COLOR);
+
+            int thumbHeight = Math.max(10, gridViewportHeight * gridViewportHeight / totalContentHeight);
+            int thumbY = viewportTop + (gridViewportHeight - thumbHeight) * scrollOffset / maxScroll();
+            graphics.fill(trackX, thumbY, trackX + SCROLLBAR_WIDTH, thumbY + thumbHeight, SCROLLBAR_THUMB_COLOR);
+        }
+
+        if (hoveredBox != null) {
+            ShopEntry entry = hoveredBox;
+            List<ClientTooltipComponent> lines = List.of(
+                    ClientTooltipComponent.create(entry.stack().getHoverName().getVisualOrderText()),
+                    ClientTooltipComponent.create(Component.translatable("tooltip.shops.buy_price", entry.buyPrice()).getVisualOrderText()),
+                    ClientTooltipComponent.create(Component.translatable("tooltip.shops.sell_price", entry.sellPrice()).getVisualOrderText())
+            );
+            graphics.tooltip(Minecraft.getInstance().font, lines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null);
+        }
     }
 
-    public record DisplayedItem(ShopEntry entry, int x, int y) {}
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int viewportTop = gridY;
+        int viewportBottom = gridY + gridViewportHeight;
 
-    // Utility
-    public static boolean isMouseOver(double mouseX, double mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        Player player = Minecraft.getInstance().player;
+        int playerBalance = player != null ? player.getData(ShopsAttachments.PLAYER_BALANCE).getBalance() : 0;
+
+        for (PlacedItem placed : placedItems) {
+            int boxY = gridY + placed.y() - scrollOffset;
+            if (boxY + SLOT_HEIGHT < viewportTop || boxY > viewportBottom) continue;
+
+            int buttonX = gridX + placed.x();
+            int buttonY = boxY + ITEM_BOX_SIZE + SLOT_SPACING;
+            int buttonWidth = ITEM_BOX_SIZE;
+
+            if (event.x() >= buttonX && event.x() < buttonX + buttonWidth
+                    && event.y() >= buttonY && event.y() < buttonY + BUY_BUTTON_HEIGHT
+                    && event.y() >= viewportTop && event.y() < viewportBottom) {
+                if (playerBalance >= placed.entry().buyPrice()) {
+                    onBuy(placed.entry());
+                }
+                return true;
+            }
+        }
+
+        return super.mouseClicked(event, doubleClick);
     }
 
-    public static boolean isMouseAboveArea(int pMouseX, int pMouseY, int x, int y, int offsetX, int offsetY, int width, int height) {
-        return isMouseOver(pMouseX, pMouseY, x + offsetX, y + offsetY, width, height);
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (mouseX >= gridX && mouseX < gridX + gridColumns * SLOT_WIDTH
+                && mouseY >= gridY && mouseY < gridY + gridViewportHeight) {
+            scrollOffset = Mth.clamp(scrollOffset - (int) (scrollY * SLOT_HEIGHT / 2), 0, maxScroll());
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
+
+    private void onBuy(ShopEntry entry) {
+        Identifier itemId = BuiltInRegistries.ITEM.getKey(entry.stack().getItem());
+        ClientPacketDistributor.sendToServer(new BuyShopItem(itemId));
+
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    private record PlacedHeader(Component text, int y) {}
+
+    private record PlacedItem(ShopEntry entry, int x, int y) {}
+
+    public record ShopEntry(String namespace, ItemStack stack, int buyPrice, int sellPrice, String tier) {}
 }

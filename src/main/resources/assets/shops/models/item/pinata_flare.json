@@ -1,7 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "shops:item/flare",
-    "layer1": "shops:item/flare_overlay"
-  }
-}

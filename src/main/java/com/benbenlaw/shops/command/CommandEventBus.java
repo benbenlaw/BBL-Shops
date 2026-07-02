@@ -11,5 +11,6 @@ public class CommandEventBus {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         BalanceCommand.register(event.getDispatcher());
+        StageCommand.register(event.getDispatcher());
     }
 }
