@@ -17,8 +17,9 @@ public class ClientScreens {
         //Actual
         List<ShopScreen.ShopEntry> entries = ClientShopRegistry.all().stream()
                 .map(clientEntry -> new ShopScreen.ShopEntry(
+                        clientEntry.entryId(),
                         clientEntry.namespace(),
-                        new ItemStack(clientEntry.item()),
+                        clientEntry.stack(),
                         clientEntry.buyPrice(),
                         clientEntry.sellPrice(),
                         clientEntry.tier()

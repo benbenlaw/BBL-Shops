@@ -9,6 +9,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import java.util.List;
@@ -21,8 +22,9 @@ public record SyncShopEntriesToClient(List<Entry> entries) implements CustomPack
     public static final IPayloadHandler<SyncShopEntriesToClient> HANDLER = (packet, context) -> {
         var entries = packet.entries().stream()
                 .map(entry -> new ClientShopEntry(
+                        entry.entryId(),
                         entry.entryId().getNamespace(),
-                        BuiltInRegistries.ITEM.getValue(entry.itemId()),
+                        entry.stack(),
                         entry.buyPrice(),
                         entry.sellPrice(),
                         entry.tier()
@@ -32,11 +34,11 @@ public record SyncShopEntriesToClient(List<Entry> entries) implements CustomPack
         ClientShopRegistry.setEntries(entries);
     };
 
-    public record Entry(Identifier entryId, Identifier itemId, int buyPrice, int sellPrice, String tier) {
+    public record Entry(Identifier entryId, ItemStack stack, int buyPrice, int sellPrice, String tier) {
 
         public static final StreamCodec<RegistryFriendlyByteBuf, Entry> STREAM_CODEC = StreamCodec.composite(
                 Identifier.STREAM_CODEC, Entry::entryId,
-                Identifier.STREAM_CODEC, Entry::itemId,
+                ItemStack.STREAM_CODEC, Entry::stack,
                 ByteBufCodecs.VAR_INT, Entry::buyPrice,
                 ByteBufCodecs.VAR_INT, Entry::sellPrice,
                 ByteBufCodecs.STRING_UTF8, Entry::tier,

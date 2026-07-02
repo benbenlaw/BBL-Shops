@@ -71,7 +71,7 @@ public class ServerEvents {
                 ShopRegistry.all().entrySet().stream()
                         .map(e -> new SyncShopEntriesToClient.Entry(
                                 e.getKey(),
-                                net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(e.getValue().item()),
+                                e.getValue().stack(),
                                 e.getValue().buyPrice(),
                                 e.getValue().sellPrice(),
                                 e.getValue().tier()

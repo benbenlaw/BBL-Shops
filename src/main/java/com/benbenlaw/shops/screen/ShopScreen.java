@@ -322,9 +322,7 @@ public class ShopScreen extends Screen {
     }
 
     private void onBuy(ShopEntry entry) {
-        Identifier itemId = BuiltInRegistries.ITEM.getKey(entry.stack().getItem());
-        ClientPacketDistributor.sendToServer(new BuyShopItem(itemId));
-
+        ClientPacketDistributor.sendToServer(new BuyShopItem(entry.entryId()));
     }
 
     @Override
@@ -336,5 +334,5 @@ public class ShopScreen extends Screen {
 
     private record PlacedItem(ShopEntry entry, int x, int y) {}
 
-    public record ShopEntry(String namespace, ItemStack stack, int buyPrice, int sellPrice, String tier) {}
+    public record ShopEntry(Identifier entryId, String namespace, ItemStack stack, int buyPrice, int sellPrice, String tier) {}
 }

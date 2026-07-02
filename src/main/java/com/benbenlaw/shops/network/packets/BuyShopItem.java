@@ -3,6 +3,8 @@ package com.benbenlaw.shops.network.packets;
 import com.benbenlaw.shops.Shops;
 import com.benbenlaw.shops.attachments.PlayerBalanceData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
+import com.benbenlaw.shops.loader.ShopJsonEntry;
+import com.benbenlaw.shops.loader.ShopRegistry;
 import com.benbenlaw.shops.screen.ShopScreen;
 import com.benbenlaw.shops.screen.TestShopData;
 import com.benbenlaw.shops.sound.ShopsSounds;
@@ -24,26 +26,23 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import java.util.Optional;
 
-public record BuyShopItem(Identifier itemId) implements CustomPacketPayload {
+public record BuyShopItem(Identifier entryId) implements CustomPacketPayload {
 
     public static final Type<BuyShopItem> TYPE =
             new Type<>(Identifier.fromNamespaceAndPath(Shops.MOD_ID, "buy_shop_item"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, BuyShopItem> STREAM_CODEC = StreamCodec.composite(
-            Identifier.STREAM_CODEC, BuyShopItem::itemId,
+            Identifier.STREAM_CODEC, BuyShopItem::entryId,
             BuyShopItem::new
     );
 
     public static final IPayloadHandler<BuyShopItem> HANDLER = (packet, context) -> {
         if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
 
-        Optional<ShopScreen.ShopEntry> maybeEntry = TestShopData.get().stream()
-                .filter(entry -> BuiltInRegistries.ITEM.getKey(entry.stack().getItem()).equals(packet.itemId()))
-                .findFirst();
+        Optional<ShopJsonEntry> maybeEntry = ShopRegistry.get(packet.entryId());
+        if (maybeEntry.isEmpty()) return;
 
-        if (maybeEntry.isEmpty()) return; // unknown/unlisted item id, ignore silently
-
-        ShopScreen.ShopEntry entry = maybeEntry.get();
+        ShopJsonEntry entry = maybeEntry.get();
         PlayerBalanceData data = serverPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get());
 
         if (!entry.tier().isEmpty() && !data.hasStage(entry.tier())) {
@@ -66,7 +65,6 @@ public record BuyShopItem(Identifier itemId) implements CustomPacketPayload {
                 1.0f, 1.0f,
                 serverPlayer.level().getRandom().nextLong()
         ));
-
         serverPlayer.connection.send(new ClientboundSoundPacket(
                 Holder.direct(ShopsSounds.COIN_COLLECTED.get()),
                 SoundSource.PLAYERS,

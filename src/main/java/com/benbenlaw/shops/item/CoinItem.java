@@ -1,5 +1,6 @@
 package com.benbenlaw.shops.item;
 
+import com.benbenlaw.shops.attachments.PlayerBalanceData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
 import com.benbenlaw.shops.sound.ShopsSounds;
@@ -34,11 +35,12 @@ public class CoinItem extends Item {
             if (owner instanceof Player player && level.getGameTime() % 20 == 0) {
 
                 itemStack.shrink(1);
-                int currentBalance = player.getData(ShopsAttachments.PLAYER_BALANCE).getBalance();
-                int newBalance = currentBalance + value;
 
-                player.getData(ShopsAttachments.PLAYER_BALANCE).setBalance(newBalance);
-                PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerBalanceToClient(newBalance));
+                PlayerBalanceData current = player.getData(ShopsAttachments.PLAYER_BALANCE.get());
+                PlayerBalanceData updated = current.addBalance(value);
+                player.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
+
+                PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerBalanceToClient(updated.getBalance()));
                 level.playSound(null, player.blockPosition(), ShopsSounds.COIN_COLLECTED.get(), player.getSoundSource(), 0.5f, 1.0f);
             }
         }
