@@ -1,11 +1,10 @@
-package com.benbenlaw.shops.events;
+package com.benbenlaw.shops.events.client;
 
 import com.benbenlaw.shops.Shops;
 import com.benbenlaw.shops.attachments.PlayerBalanceData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.screen.ClientScreens;
-import com.benbenlaw.shops.screen.ShopScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;

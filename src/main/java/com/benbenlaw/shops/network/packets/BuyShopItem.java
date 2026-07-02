@@ -3,24 +3,22 @@ package com.benbenlaw.shops.network.packets;
 import com.benbenlaw.shops.Shops;
 import com.benbenlaw.shops.attachments.PlayerBalanceData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
-import com.benbenlaw.shops.loader.ShopJsonEntry;
-import com.benbenlaw.shops.loader.ShopRegistry;
-import com.benbenlaw.shops.screen.ShopScreen;
-import com.benbenlaw.shops.screen.TestShopData;
+import com.benbenlaw.shops.recipe.ShopEntryRecipe;
 import com.benbenlaw.shops.sound.ShopsSounds;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
@@ -39,10 +37,11 @@ public record BuyShopItem(Identifier entryId) implements CustomPacketPayload {
     public static final IPayloadHandler<BuyShopItem> HANDLER = (packet, context) -> {
         if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
 
-        Optional<ShopJsonEntry> maybeEntry = ShopRegistry.get(packet.entryId());
-        if (maybeEntry.isEmpty()) return;
+        Optional<RecipeHolder<?>> maybeHolder = Optional.ofNullable(serverPlayer.level().recipeAccess().recipeMap()
+                .byKey(ResourceKey.create(Registries.RECIPE, packet.entryId())));
 
-        ShopJsonEntry entry = maybeEntry.get();
+        if (maybeHolder.isEmpty() || !(maybeHolder.get().value() instanceof ShopEntryRecipe entry)) return;
+
         PlayerBalanceData data = serverPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get());
 
         if (!entry.tier().isEmpty() && !data.hasStage(entry.tier())) {
@@ -73,7 +72,7 @@ public record BuyShopItem(Identifier entryId) implements CustomPacketPayload {
                 serverPlayer.level().getRandom().nextLong()
         ));
 
-        ItemStack stack = entry.stack().copy();
+        ItemStack stack = entry.stack().create().copy();
         if (!serverPlayer.getInventory().add(stack)) {
             serverPlayer.drop(stack, false);
         }

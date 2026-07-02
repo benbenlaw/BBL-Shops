@@ -1,9 +1,0 @@
-{
-  "item": {
-    "id": "minecraft:diamond_sword",
-    "count": 1
-  },
-  "buy_price": 250,
-  "sell_price": 120,
-  "tier": "tier_1"
-}

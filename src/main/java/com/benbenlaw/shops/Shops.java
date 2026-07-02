@@ -4,8 +4,8 @@ import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.config.StartUpConfig;
 import com.benbenlaw.shops.item.ShopsCreativeTab;
 import com.benbenlaw.shops.item.ShopsItems;
-import com.benbenlaw.shops.loader.ShopEntryReloadListener;
 import com.benbenlaw.shops.network.ShopsNetworking;
+import com.benbenlaw.shops.recipe.ShopsRecipeTypes;
 import com.benbenlaw.shops.sound.ShopsSounds;
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
@@ -32,8 +32,8 @@ public class Shops {
         ShopsItems.ITEMS.register(eventBus);
         ShopsCreativeTab.CREATIVE_MODE_TABS.register(eventBus);
         ShopsSounds.SOUND_EVENTS.register(eventBus);
-
-        NeoForge.EVENT_BUS.addListener(Shops::onAddReloadListener);
+        ShopsRecipeTypes.SERIALIZER.register(eventBus);
+        ShopsRecipeTypes.TYPES.register(eventBus);
 
         eventBus.addListener(this::commonSetup);
 
@@ -46,11 +46,4 @@ public class Shops {
     public static Identifier identifier(String path) {
         return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
-
-    @SubscribeEvent
-    public static void onAddReloadListener(AddServerReloadListenersEvent event) {
-        event.addListener(Shops.identifier("shop_entries"), new ShopEntryReloadListener());
-    }
-
-
 }

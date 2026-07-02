@@ -1,9 +1,9 @@
 package com.benbenlaw.shops.events.client;
 
 import com.benbenlaw.shops.Shops;
-import com.benbenlaw.shops.client.ClientShopRegistry;
 import com.benbenlaw.shops.item.CoinItem;
 import com.benbenlaw.shops.item.ShopsItems;
+import com.benbenlaw.shops.recipe.ShopsRecipeTypes;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -13,6 +13,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RecipesReceivedEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 @EventBusSubscriber(modid = Shops.MOD_ID, value = Dist.CLIENT)
@@ -39,11 +40,4 @@ public class ClientEvents {
 
         }
     }
-
-    @SubscribeEvent
-    public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
-        ClientShopRegistry.clear();
-    }
-
-
 }

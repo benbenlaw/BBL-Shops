@@ -3,7 +3,6 @@ package com.benbenlaw.shops.network;
 import com.benbenlaw.shops.Shops;
 import com.benbenlaw.shops.network.packets.BuyShopItem;
 import com.benbenlaw.shops.network.packets.SyncPlayerBalanceToClient;
-import com.benbenlaw.shops.network.packets.SyncShopEntriesToClient;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
@@ -14,7 +13,6 @@ public class ShopsNetworking {
 
         //To Client From Server
         registrar.playToClient(SyncPlayerBalanceToClient.TYPE, SyncPlayerBalanceToClient.STREAM_CODEC, SyncPlayerBalanceToClient.HANDLER);
-        registrar.playToClient(SyncShopEntriesToClient.TYPE, SyncShopEntriesToClient.STREAM_CODEC, SyncShopEntriesToClient.HANDLER);
 
         //To Server From Client
         registrar.playToServer(BuyShopItem.TYPE, BuyShopItem.STREAM_CODEC, BuyShopItem.HANDLER);
