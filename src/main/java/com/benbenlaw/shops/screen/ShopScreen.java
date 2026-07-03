@@ -283,6 +283,13 @@ public class ShopScreen extends Screen {
             graphics.item(stack, -8, -8);
             graphics.pose().popMatrix();
 
+            if (stack.getCount() != 1) {
+                String countText = String.valueOf(stack.getCount());
+                int textWidth = Minecraft.getInstance().font.width(countText);
+                graphics.text(Minecraft.getInstance().font, countText,
+                        boxX + ITEM_BOX_SIZE - textWidth - 2, boxY + ITEM_BOX_SIZE - 10, 0xFFFFFFFF, true);
+            }
+
             int normalColor = mode == Mode.BUY ? BUY_BUTTON_COLOR : SELL_BUTTON_COLOR;
             int hoverColor = mode == Mode.BUY ? BUY_BUTTON_HOVER_COLOR : SELL_BUTTON_HOVER_COLOR;
             int borderColor = mode == Mode.BUY ? BUY_BUTTON_BORDER : SELL_BUTTON_BORDER;
@@ -320,8 +327,6 @@ public class ShopScreen extends Screen {
             for (Component line : Screen.getTooltipFromItem(Minecraft.getInstance(), stack)) {
                 lines.add(ClientTooltipComponent.create(line.getVisualOrderText()));
             }
-            lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.buy_price", recipe.buyPrice()).getVisualOrderText()));
-            lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.sell_price", recipe.sellPrice()).getVisualOrderText()));
 
             graphics.tooltip(Minecraft.getInstance().font, lines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null, stack);
         }

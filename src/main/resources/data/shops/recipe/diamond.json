@@ -1,7 +1,8 @@
 {
   "type": "shops:shop",
   "item": {
-    "id": "minecraft:diamond"
+    "id": "minecraft:diamond",
+    "count": 11
   },
   "buy_price": 100,
   "sell_price": 60,
