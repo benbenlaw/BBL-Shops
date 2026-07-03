@@ -11,6 +11,8 @@ public class StartUpConfig {
     public static final ModConfigSpec.ConfigValue<Integer> ironCoinValue;
     public static final ModConfigSpec.ConfigValue<Integer> goldCoinValue;
 
+    public static final ModConfigSpec.ConfigValue<Boolean> autoConsumeCoins;
+
     static {
 
         //Coin Values
@@ -25,6 +27,9 @@ public class StartUpConfig {
 
         goldCoinValue = BUILDER.comment("Value of a Gold Coin in base currency, default 25")
                 .defineInRange("goldCoinValue", 10, 1, Integer.MAX_VALUE);
+
+        autoConsumeCoins = BUILDER.comment("Automatically consume coins when entering inventory, default true")
+                .define("autoConsumeCoins", true);
 
         BUILDER.pop();
 

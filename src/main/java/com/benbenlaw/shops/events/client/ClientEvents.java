@@ -25,7 +25,7 @@ public class ClientEvents {
         ItemStack stack = event.getItemStack();
 
         if (stack.getItem() instanceof CoinItem coinItem) {
-            addShiftTooltip(stack, event, ShopsItems.COPPER_COIN.get(), "tooltip.utility.crook", String.valueOf(coinItem.getValue()));
+            addShiftTooltip(stack, event, coinItem, "tooltip.shops.value", String.valueOf(coinItem.getValue()));
         }
     }
 
