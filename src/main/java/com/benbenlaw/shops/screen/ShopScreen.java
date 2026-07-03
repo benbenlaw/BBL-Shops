@@ -3,9 +3,11 @@ package com.benbenlaw.shops.screen;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.packets.BuyShopItem;
+import com.benbenlaw.shops.network.packets.SellShopItem;
 import com.benbenlaw.shops.recipe.ShopEntryRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,18 +18,22 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.*;
 
 public class ShopScreen extends Screen {
 
+    private enum Mode { BUY, SELL }
+
     private static final int ITEM_BOX_SIZE = 34;
     private static final int ITEM_ICON_SCALE = 2;
     private static final int BUY_BUTTON_HEIGHT = 14;
     private static final int SLOT_SPACING = 4;
+    private static final int BUTTON_Y_OFFSET = -2;
     private static final int SLOT_WIDTH = ITEM_BOX_SIZE + SLOT_SPACING;
-    private static final int SLOT_HEIGHT = ITEM_BOX_SIZE + BUY_BUTTON_HEIGHT + SLOT_SPACING + 2;
+    private static final int SLOT_HEIGHT = ITEM_BOX_SIZE + BUY_BUTTON_HEIGHT + BUTTON_Y_OFFSET + 4;
 
     private static final int TIER_HEADER_HEIGHT = 18;
     private static final int TIER_SPACING = 10;
@@ -42,6 +48,7 @@ public class ShopScreen extends Screen {
     private static final int FOOTER_HEIGHT = 26;
     private static final int SCREEN_PADDING = 20;
     private static final int SCROLLBAR_WIDTH = 4;
+    private static final int MODE_BUTTON_WIDTH = 50;
 
     private static final int PANEL_BACKGROUND = 0xFF1E1E1E;
     private static final int PANEL_BORDER = 0xFF444444;
@@ -52,6 +59,9 @@ public class ShopScreen extends Screen {
     private static final int BUY_BUTTON_BORDER = 0xFF1F5C1F;
     private static final int BUY_BUTTON_DISABLED_COLOR = 0xFF4A2E2E;
     private static final int BUY_BUTTON_DISABLED_BORDER = 0xFF6B3B3B;
+    private static final int SELL_BUTTON_COLOR = 0xFF2E5F8F;
+    private static final int SELL_BUTTON_HOVER_COLOR = 0xFF3D7AB5;
+    private static final int SELL_BUTTON_BORDER = 0xFF1A3A57;
     private static final int PRICE_UNAFFORDABLE_COLOR = 0xFFFF5555;
     private static final int TIER_HEADER_COLOR = 0xFFFFD700;
     private static final int SCROLLBAR_TRACK_COLOR = 0xFF141414;
@@ -62,6 +72,7 @@ public class ShopScreen extends Screen {
 
     private String searchText = "";
     private int scrollOffset = 0;
+    private Mode mode = Mode.BUY;
 
     private int gridColumns;
     private int gridViewportHeight;
@@ -103,23 +114,46 @@ public class ShopScreen extends Screen {
         gridViewportHeight = viewportRows * SLOT_HEIGHT - SLOT_SPACING;
 
         int footerY = panelY + panelHeight - FOOTER_HEIGHT - 3;
+        int searchWidth = panelWidth - PANEL_MARGIN * 2 - MODE_BUTTON_WIDTH - 4;
+
         EditBox searchBox = new EditBox(Minecraft.getInstance().font,
-                panelX + PANEL_MARGIN, footerY, panelWidth - PANEL_MARGIN * 2, 20, Component.literal("Search"));
+                panelX + PANEL_MARGIN, footerY, searchWidth, 20, Component.literal("Search"));
         searchBox.setTooltip(Tooltip.create(Component.translatable("tooltip.shops.search_bar")));
         searchBox.setResponder(this::onSearchChanged);
         addRenderableWidget(searchBox);
 
-        rebuildLayout();
+        addRenderableWidget(Button.builder(modeButtonLabel(), b -> toggleMode(b))
+                .bounds(panelX + panelWidth - PANEL_MARGIN - MODE_BUTTON_WIDTH, footerY, MODE_BUTTON_WIDTH, 20)
+                .build());
+
+        applyFilters();
+    }
+
+    private Component modeButtonLabel() {
+        return mode == Mode.BUY
+                ? Component.translatable("tooltip.shops.mode_buy")
+                : Component.translatable("tooltip.shops.mode_sell");
+    }
+
+    private void toggleMode(Button button) {
+        mode = (mode == Mode.BUY) ? Mode.SELL : Mode.BUY;
+        button.setMessage(modeButtonLabel());
+        scrollOffset = 0;
+        applyFilters();
     }
 
     private void onSearchChanged(String value) {
         searchText = value.toLowerCase();
-        filteredEntries = searchText.isEmpty()
-                ? allEntries
-                : allEntries.stream()
-                .filter(e -> e.getValue().stack().create().getHoverName().getString().toLowerCase().contains(searchText))
-                .toList();
         scrollOffset = 0;
+        applyFilters();
+    }
+
+    private void applyFilters() {
+        filteredEntries = allEntries.stream()
+                .filter(e -> mode == Mode.BUY ? e.getValue().buyPrice() > 0 : e.getValue().sellPrice() > 0)
+                .filter(e -> searchText.isEmpty()
+                        || e.getValue().stack().create().getHoverName().getString().toLowerCase().contains(searchText))
+                .toList();
         rebuildLayout();
     }
 
@@ -143,8 +177,9 @@ public class ShopScreen extends Screen {
         for (Map.Entry<String, List<Map.Entry<Identifier, ShopEntryRecipe>>> tierGroup : byTier.entrySet()) {
             String tier = tierGroup.getKey();
             List<Map.Entry<Identifier, ShopEntryRecipe>> entries = tierGroup.getValue();
+            entries.sort(Comparator.comparingInt(e -> e.getValue().order()));
 
-            String namespace = entries.get(0).getKey().getNamespace(); // namespace of the addon that defined this tier group
+            String namespace = entries.getFirst().getKey().getNamespace();
             Component headerText = Component.translatable("shop_tier." + namespace + "." + (tier.isEmpty() ? "general" : tier));
             placedHeaders.add(new PlacedHeader(headerText, currentY));
             currentY += TIER_HEADER_HEIGHT;
@@ -166,6 +201,16 @@ public class ShopScreen extends Screen {
 
     private int maxScroll() {
         return Math.max(0, totalContentHeight - gridViewportHeight);
+    }
+
+    private boolean playerHasItem(Player player, ItemStack wanted) {
+        if (player == null) return false;
+        for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+            if (!stack.isEmpty() && ItemStack.isSameItemSameComponents(stack, wanted)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -207,26 +252,27 @@ public class ShopScreen extends Screen {
             graphics.text(Minecraft.getInstance().font, header.text(), gridX, screenY + 4, TIER_HEADER_COLOR, true);
         }
 
-        Map.Entry<Identifier, ShopEntryRecipe> hoveredBox = null;
+        Map.Entry<Identifier, ShopEntryRecipe> hoveredSlot = null;
 
         for (PlacedItem placed : placedItems) {
             int boxX = gridX + placed.x();
             int boxY = gridY + placed.y() - scrollOffset;
             int buttonX = boxX;
-            int buttonY = boxY + ITEM_BOX_SIZE + SLOT_SPACING;
+            int buttonY = boxY + ITEM_BOX_SIZE + BUTTON_Y_OFFSET;
             int buttonWidth = ITEM_BOX_SIZE;
 
             if (boxY + SLOT_HEIGHT < viewportTop || boxY > viewportBottom) continue;
 
-            boolean boxHovered = mouseX >= boxX && mouseX < boxX + ITEM_BOX_SIZE
-                    && mouseY >= boxY && mouseY < boxY + ITEM_BOX_SIZE
-                    && mouseY >= viewportTop && mouseY < viewportBottom;
-            boolean buttonHovered = mouseX >= buttonX && mouseX < buttonX + buttonWidth
-                    && mouseY >= buttonY && mouseY < buttonY + BUY_BUTTON_HEIGHT
+            boolean slotHovered = mouseX >= boxX && mouseX < boxX + ITEM_BOX_SIZE
+                    && mouseY >= boxY && mouseY < buttonY + BUY_BUTTON_HEIGHT
                     && mouseY >= viewportTop && mouseY < viewportBottom;
 
             ShopEntryRecipe recipe = placed.entry().getValue();
-            boolean canAfford = playerBalance >= recipe.buyPrice();
+            ItemStack stack = recipe.stack().create();
+            int price = mode == Mode.BUY ? recipe.buyPrice() : recipe.sellPrice();
+            boolean canInteract = mode == Mode.BUY
+                    ? playerBalance >= price
+                    : playerHasItem(player, stack);
 
             graphics.fill(boxX, boxY, boxX + ITEM_BOX_SIZE, boxY + ITEM_BOX_SIZE, BOX_BACKGROUND);
             graphics.outline(boxX, boxY, ITEM_BOX_SIZE, ITEM_BOX_SIZE, BOX_BORDER);
@@ -234,22 +280,24 @@ public class ShopScreen extends Screen {
             graphics.pose().pushMatrix();
             graphics.pose().translate(boxX + ITEM_BOX_SIZE / 2f, boxY + ITEM_BOX_SIZE / 2f);
             graphics.pose().scale(ITEM_ICON_SCALE, ITEM_ICON_SCALE);
-            graphics.item(recipe.stack().create(), -8, -8);
+            graphics.item(stack, -8, -8);
             graphics.pose().popMatrix();
 
-            int buttonColor = !canAfford
-                    ? BUY_BUTTON_DISABLED_COLOR
-                    : (buttonHovered ? BUY_BUTTON_HOVER_COLOR : BUY_BUTTON_COLOR);
-            int buttonBorder = !canAfford ? BUY_BUTTON_DISABLED_BORDER : BUY_BUTTON_BORDER;
-            int priceColor = canAfford ? 0xFFFFFFFF : PRICE_UNAFFORDABLE_COLOR;
+            int normalColor = mode == Mode.BUY ? BUY_BUTTON_COLOR : SELL_BUTTON_COLOR;
+            int hoverColor = mode == Mode.BUY ? BUY_BUTTON_HOVER_COLOR : SELL_BUTTON_HOVER_COLOR;
+            int borderColor = mode == Mode.BUY ? BUY_BUTTON_BORDER : SELL_BUTTON_BORDER;
+
+            int buttonColor = !canInteract ? BUY_BUTTON_DISABLED_COLOR : (slotHovered ? hoverColor : normalColor);
+            int buttonBorder = !canInteract ? BUY_BUTTON_DISABLED_BORDER : borderColor;
+            int priceColor = canInteract ? 0xFFFFFFFF : PRICE_UNAFFORDABLE_COLOR;
 
             graphics.fill(buttonX, buttonY, buttonX + buttonWidth, buttonY + BUY_BUTTON_HEIGHT, buttonColor);
             graphics.outline(buttonX, buttonY, buttonWidth, BUY_BUTTON_HEIGHT, buttonBorder);
-            graphics.centeredText(Minecraft.getInstance().font, Component.literal(String.valueOf(recipe.buyPrice())),
+            graphics.centeredText(Minecraft.getInstance().font, Component.literal(String.valueOf(price)),
                     buttonX + buttonWidth / 2, buttonY + 3, priceColor);
 
-            if (boxHovered) {
-                hoveredBox = placed.entry();
+            if (slotHovered) {
+                hoveredSlot = placed.entry();
             }
         }
 
@@ -264,14 +312,18 @@ public class ShopScreen extends Screen {
             graphics.fill(trackX, thumbY, trackX + SCROLLBAR_WIDTH, thumbY + thumbHeight, SCROLLBAR_THUMB_COLOR);
         }
 
-        if (hoveredBox != null) {
-            ShopEntryRecipe recipe = hoveredBox.getValue();
-            List<ClientTooltipComponent> lines = List.of(
-                    ClientTooltipComponent.create(recipe.stack().create().getHoverName().getVisualOrderText()),
-                    ClientTooltipComponent.create(Component.translatable("tooltip.shops.buy_price", recipe.buyPrice()).getVisualOrderText()),
-                    ClientTooltipComponent.create(Component.translatable("tooltip.shops.sell_price", recipe.sellPrice()).getVisualOrderText())
-            );
-            graphics.tooltip(Minecraft.getInstance().font, lines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null);
+        if (hoveredSlot != null) {
+            ShopEntryRecipe recipe = hoveredSlot.getValue();
+            ItemStack stack = recipe.stack().create();
+
+            List<ClientTooltipComponent> lines = new ArrayList<>();
+            for (Component line : Screen.getTooltipFromItem(Minecraft.getInstance(), stack)) {
+                lines.add(ClientTooltipComponent.create(line.getVisualOrderText()));
+            }
+            lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.buy_price", recipe.buyPrice()).getVisualOrderText()));
+            lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.sell_price", recipe.sellPrice()).getVisualOrderText()));
+
+            graphics.tooltip(Minecraft.getInstance().font, lines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null, stack);
         }
     }
 
@@ -287,15 +339,22 @@ public class ShopScreen extends Screen {
             int boxY = gridY + placed.y() - scrollOffset;
             if (boxY + SLOT_HEIGHT < viewportTop || boxY > viewportBottom) continue;
 
-            int buttonX = gridX + placed.x();
-            int buttonY = boxY + ITEM_BOX_SIZE + SLOT_SPACING;
-            int buttonWidth = ITEM_BOX_SIZE;
+            int boxX = gridX + placed.x();
+            int buttonY = boxY + ITEM_BOX_SIZE + BUTTON_Y_OFFSET;
 
-            if (event.x() >= buttonX && event.x() < buttonX + buttonWidth
-                    && event.y() >= buttonY && event.y() < buttonY + BUY_BUTTON_HEIGHT
+            if (event.x() >= boxX && event.x() < boxX + ITEM_BOX_SIZE
+                    && event.y() >= boxY && event.y() < buttonY + BUY_BUTTON_HEIGHT
                     && event.y() >= viewportTop && event.y() < viewportBottom) {
-                if (playerBalance >= placed.entry().getValue().buyPrice()) {
-                    onBuy(placed.entry());
+
+                ShopEntryRecipe recipe = placed.entry().getValue();
+                if (mode == Mode.BUY) {
+                    if (playerBalance >= recipe.buyPrice()) {
+                        ClientPacketDistributor.sendToServer(new BuyShopItem(placed.entry().getKey()));
+                    }
+                } else {
+                    if (playerHasItem(player, recipe.stack().create())) {
+                        ClientPacketDistributor.sendToServer(new SellShopItem(placed.entry().getKey()));
+                    }
                 }
                 return true;
             }
@@ -312,10 +371,6 @@ public class ShopScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-    }
-
-    private void onBuy(Map.Entry<Identifier, ShopEntryRecipe> entry) {
-        ClientPacketDistributor.sendToServer(new BuyShopItem(entry.getKey()));
     }
 
     @Override

@@ -1,0 +1,10 @@
+{
+  "type": "shops:shop",
+  "item": {
+    "id": "minecraft:iron_ingot"
+  },
+  "buy_price": 100,
+  "sell_price": 60,
+  "tier": "tier_1",
+  "order": 10000
+}

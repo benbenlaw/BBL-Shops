@@ -24,6 +24,9 @@
   "jei.shops.selling": "Player Sells",
   "jei.shops.buying": "Player Buys",
 
+  "tooltip.shops.mode_buy": "Buy",
+  "tooltip.shops.mode_sell": "Sell",
+
   "block.shops.shop.player_balance_card": "Insert Player Balance Card",
   "block.shops.shop.selling_input": "Selling Input",
   "block.shops.shop.catalog": "Insert Catalog",

@@ -13,14 +13,15 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
-public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPrice, String tier) implements Recipe<RecipeInput> {
+public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPrice, String tier, int order) implements Recipe<RecipeInput> {
 
     public static final MapCodec<ShopEntryRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     ItemStackTemplate.CODEC.fieldOf("item").forGetter(ShopEntryRecipe::stack),
                     Codec.INT.fieldOf("buy_price").forGetter(ShopEntryRecipe::buyPrice),
                     Codec.INT.fieldOf("sell_price").forGetter(ShopEntryRecipe::sellPrice),
-                    Codec.STRING.optionalFieldOf("tier", "").forGetter(ShopEntryRecipe::tier)
+                    Codec.STRING.optionalFieldOf("tier", "").forGetter(ShopEntryRecipe::tier),
+                    Codec.INT.optionalFieldOf("order", 0).forGetter(ShopEntryRecipe::order)
             ).apply(instance, ShopEntryRecipe::new)
     );
 
@@ -37,7 +38,8 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
         int buyPrice = buffer.readVarInt();
         int sellPrice = buffer.readVarInt();
         String tier = ByteBufCodecs.STRING_UTF8.decode(buffer);
-        return new ShopEntryRecipe(stack, buyPrice, sellPrice, tier);
+        int order = buffer.readVarInt();
+        return new ShopEntryRecipe(stack, buyPrice, sellPrice, tier, order);
     }
 
     private static void write(RegistryFriendlyByteBuf buffer, ShopEntryRecipe recipe) {
@@ -45,9 +47,9 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
         buffer.writeVarInt(recipe.buyPrice);
         buffer.writeVarInt(recipe.sellPrice);
         ByteBufCodecs.STRING_UTF8.encode(buffer, recipe.tier);
+        buffer.writeVarInt(recipe.order);
     }
 
-    // Data-only recipe: never actually matched against a real crafting grid.
     @Override
     public boolean matches(@NotNull RecipeInput input, @NotNull Level level) {
         return false;

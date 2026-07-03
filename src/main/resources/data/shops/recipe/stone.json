@@ -1,0 +1,9 @@
+{
+  "type": "shops:shop",
+  "item": {
+    "id": "minecraft:stone"
+  },
+  "buy_price": 100,
+  "sell_price": 60,
+  "tier": "tier_2"
+}
