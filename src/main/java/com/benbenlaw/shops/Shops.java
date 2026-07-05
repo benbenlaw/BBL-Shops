@@ -2,6 +2,7 @@ package com.benbenlaw.shops;
 
 import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.config.StartUpConfig;
+import com.benbenlaw.shops.datamaps.ShopsDataMaps;
 import com.benbenlaw.shops.entity.ShopsEntityTypes;
 import com.benbenlaw.shops.item.ShopsCreativeTab;
 import com.benbenlaw.shops.item.ShopsItems;

@@ -43,6 +43,6 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ShopsEntityTypes.SHOP_TRADER_VILLAGER.get(), ShopTraderVillagerRenderer::new);
+        event.registerEntityRenderer(ShopsEntityTypes.SHOP_TRADER.get(), ShopTraderVillagerRenderer::new);
     }
 }
