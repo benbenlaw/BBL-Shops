@@ -86,7 +86,7 @@ public class ShopsRecipeCategory implements IRecipeCategory<ShopEntryRecipe> {
     public void setRecipe(IRecipeLayoutBuilder builder, ShopEntryRecipe recipe, @NotNull IFocusGroup focuses) {
 
         if (recipe.sellPrice() > 0) {
-            builder.addSlot(RecipeIngredientRole.OUTPUT, 2, 2).add(recipe.stack());
+            builder.addSlot(RecipeIngredientRole.INPUT, 2, 2).add(recipe.stack());
 
             builder.addSlot(RecipeIngredientRole.INPUT, 48, 2).add(new ItemStack(ShopsItems.COPPER_COIN.get())).addRichTooltipCallback(
                     (ingredients, tooltip) -> {
@@ -103,7 +103,7 @@ public class ShopsRecipeCategory implements IRecipeCategory<ShopEntryRecipe> {
         }
 
         if (recipe.buyPrice() > 0) {
-            builder.addSlot(RecipeIngredientRole.INPUT, 2, 2).add(recipe.stack());
+            builder.addSlot(RecipeIngredientRole.OUTPUT, 2, 2).add(recipe.stack());
 
             builder.addSlot(RecipeIngredientRole.OUTPUT, 67, 2).add(new ItemStack(ShopsItems.COPPER_COIN.get())).addRichTooltipCallback(
                     (ingredients, tooltip) -> {
