@@ -69,6 +69,7 @@ public class ShopScreen extends Screen {
 
     private final List<Map.Entry<Identifier, ShopEntryRecipe>> allEntries;
     private List<Map.Entry<Identifier, ShopEntryRecipe>> filteredEntries;
+    private final Identifier traderFilter;
 
     private String searchText = "";
     private int scrollOffset = 0;
@@ -88,9 +89,14 @@ public class ShopScreen extends Screen {
     private int totalContentHeight = 0;
 
     public ShopScreen(Component title, Map<Identifier, ShopEntryRecipe> entries) {
+        this(title, entries, null);
+    }
+
+    public ShopScreen(Component title, Map<Identifier, ShopEntryRecipe> entries, Identifier traderFilter) {
         super(title);
         this.allEntries = new ArrayList<>(entries.entrySet());
         this.filteredEntries = this.allEntries;
+        this.traderFilter = traderFilter;
     }
 
     @Override
@@ -150,6 +156,9 @@ public class ShopScreen extends Screen {
 
     private void applyFilters() {
         filteredEntries = allEntries.stream()
+                .filter(e -> traderFilter == null
+                        ? e.getValue().trader().isEmpty()
+                        : e.getValue().trader().equals(Optional.of(traderFilter)))
                 .filter(e -> mode == Mode.BUY ? e.getValue().buyPrice() > 0 : e.getValue().sellPrice() > 0)
                 .filter(e -> searchText.isEmpty()
                         || e.getValue().stack().create().getHoverName().getString().toLowerCase().contains(searchText))

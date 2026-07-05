@@ -2,6 +2,7 @@ package com.benbenlaw.shops;
 
 import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.config.StartUpConfig;
+import com.benbenlaw.shops.entity.ShopsEntityTypes;
 import com.benbenlaw.shops.item.ShopsCreativeTab;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.ShopsNetworking;
@@ -9,12 +10,9 @@ import com.benbenlaw.shops.recipe.ShopsRecipeTypes;
 import com.benbenlaw.shops.sound.ShopsSounds;
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +32,7 @@ public class Shops {
         ShopsSounds.SOUND_EVENTS.register(eventBus);
         ShopsRecipeTypes.SERIALIZER.register(eventBus);
         ShopsRecipeTypes.TYPES.register(eventBus);
+        ShopsEntityTypes.ENTITY_TYPES.register(eventBus);
 
         eventBus.addListener(this::commonSetup);
 

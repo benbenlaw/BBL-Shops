@@ -1,19 +1,19 @@
 package com.benbenlaw.shops.events.client;
 
 import com.benbenlaw.shops.Shops;
+import com.benbenlaw.shops.entity.ShopsEntityTypes;
+import com.benbenlaw.shops.entity.renderer.ShopTraderVillagerRenderer;
 import com.benbenlaw.shops.item.CoinItem;
-import com.benbenlaw.shops.item.ShopsItems;
-import com.benbenlaw.shops.recipe.ShopsRecipeTypes;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.VillagerRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.RecipesReceivedEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 @EventBusSubscriber(modid = Shops.MOD_ID, value = Dist.CLIENT)
@@ -39,5 +39,10 @@ public class ClientEvents {
             }
 
         }
+    }
+
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ShopsEntityTypes.SHOP_TRADER_VILLAGER.get(), ShopTraderVillagerRenderer::new);
     }
 }

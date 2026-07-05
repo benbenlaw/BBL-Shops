@@ -6,6 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.*;
@@ -13,7 +14,9 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
-public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPrice, String tier, int order) implements Recipe<RecipeInput> {
+import java.util.Optional;
+
+public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPrice, String tier, int order, Optional<Identifier> trader) implements Recipe<RecipeInput> {
 
     public static final MapCodec<ShopEntryRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
@@ -21,7 +24,8 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
                     Codec.INT.fieldOf("buy_price").forGetter(ShopEntryRecipe::buyPrice),
                     Codec.INT.fieldOf("sell_price").forGetter(ShopEntryRecipe::sellPrice),
                     Codec.STRING.optionalFieldOf("tier", "").forGetter(ShopEntryRecipe::tier),
-                    Codec.INT.optionalFieldOf("order", 0).forGetter(ShopEntryRecipe::order)
+                    Codec.INT.optionalFieldOf("order", 0).forGetter(ShopEntryRecipe::order),
+                    Identifier.CODEC.optionalFieldOf("trader").forGetter(ShopEntryRecipe::trader)
             ).apply(instance, ShopEntryRecipe::new)
     );
 
@@ -39,7 +43,10 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
         int sellPrice = buffer.readVarInt();
         String tier = ByteBufCodecs.STRING_UTF8.decode(buffer);
         int order = buffer.readVarInt();
-        return new ShopEntryRecipe(stack, buyPrice, sellPrice, tier, order);
+        Optional<Identifier> trader = buffer.readBoolean()
+                ? Optional.of(Identifier.STREAM_CODEC.decode(buffer))
+                : Optional.empty();
+        return new ShopEntryRecipe(stack, buyPrice, sellPrice, tier, order, trader);
     }
 
     private static void write(RegistryFriendlyByteBuf buffer, ShopEntryRecipe recipe) {
@@ -48,6 +55,8 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
         buffer.writeVarInt(recipe.sellPrice);
         ByteBufCodecs.STRING_UTF8.encode(buffer, recipe.tier);
         buffer.writeVarInt(recipe.order);
+        buffer.writeBoolean(recipe.trader.isPresent());
+        recipe.trader.ifPresent(id -> Identifier.STREAM_CODEC.encode(buffer, id));
     }
 
     @Override

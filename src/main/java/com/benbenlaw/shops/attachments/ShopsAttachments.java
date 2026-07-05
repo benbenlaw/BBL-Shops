@@ -18,4 +18,11 @@ public class ShopsAttachments {
                             .serialize(PlayerBalanceData.CODEC.fieldOf("player_balance"))
                             .sync(PlayerBalanceData.STREAM_CODEC)
                             .build());
+
+    public static final Supplier<AttachmentType<ShopTraderData>> SHOP_TRADER_DATA =
+            ATTACHMENT_TYPES.register("shop_trader_data",
+                    () -> AttachmentType.builder(() -> ShopTraderData.EMPTY)
+                            .serialize(ShopTraderData.CODEC.fieldOf("shop_trader_data"))
+                            .sync(ShopTraderData.STREAM_CODEC)
+                            .build());
 }

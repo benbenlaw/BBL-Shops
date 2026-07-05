@@ -17,9 +17,11 @@ import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.recipe.types.IRecipeType;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
 import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import org.jetbrains.annotations.NotNull;
@@ -97,6 +99,11 @@ public class ShopsRecipeCategory implements IRecipeCategory<ShopEntryRecipe> {
                             tooltip.add(Component.translatable("jei.shops.tier", recipe.tier()));
                         }
 
+                        if (recipe.trader().isPresent()) {
+                            Block block = BuiltInRegistries.BLOCK.getValue(recipe.trader().get());
+                            tooltip.add(Component.translatable("jei.shops.trader", block.getName()));
+                        }
+
                     }
             );
 
@@ -112,6 +119,11 @@ public class ShopsRecipeCategory implements IRecipeCategory<ShopEntryRecipe> {
 
                         if (!recipe.tier().isEmpty()) {
                             tooltip.add(Component.translatable("jei.shops.tier", recipe.tier()));
+                        }
+
+                        if (recipe.trader().isPresent()) {
+                            Block block = BuiltInRegistries.BLOCK.getValue(recipe.trader().get());
+                            tooltip.add(Component.translatable("jei.shops.trader", block.getName()));
                         }
                     }
             );

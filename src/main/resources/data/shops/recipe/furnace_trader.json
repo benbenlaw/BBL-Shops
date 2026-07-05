@@ -1,0 +1,9 @@
+{
+  "type": "shops:shop",
+  "item": {
+    "id": "minecraft:furnace"
+  },
+  "buy_price": 100,
+  "sell_price": 60,
+  "trader": "minecraft:furnace"
+}
