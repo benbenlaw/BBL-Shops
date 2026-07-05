@@ -16,13 +16,18 @@ public class ClientScreens {
         Minecraft.getInstance().setScreen(new ShopScreen(Component.translatable("menu.shops.shop"), ClientRecipeCache.cachedShopRecipes));
     }
 
-    public static void openShopTraderScreen(Identifier traderId) {
+    public static void openShopTraderScreen(Identifier traderId, String traderName) {
         Map<Identifier, ShopEntryRecipe> filtered = new HashMap<>();
         for (Map.Entry<Identifier, ShopEntryRecipe> entry : ClientRecipeCache.cachedShopRecipes.entrySet()) {
             if (entry.getValue().trader().equals(Optional.of(traderId))) {
                 filtered.put(entry.getKey(), entry.getValue());
             }
         }
-        Minecraft.getInstance().setScreen(new ShopScreen(Component.translatable("menu.shops.shop"), filtered, traderId));
+
+        Component title = (traderName == null || traderName.isEmpty())
+                ? Component.translatable("menu.shops.shop")
+                : Component.literal(traderName);
+
+        Minecraft.getInstance().setScreen(new ShopScreen(title, filtered, traderId));
     }
 }

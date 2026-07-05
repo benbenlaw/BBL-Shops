@@ -233,7 +233,7 @@ public class ShopScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-        graphics.text(Minecraft.getInstance().font, Component.translatable("menu.shops.shop"),
+        graphics.text(Minecraft.getInstance().font, this.getTitle(),
                 panelX + PANEL_MARGIN, panelY + 8, 0xFFFFFFFF, true);
 
         Player player = Minecraft.getInstance().player;

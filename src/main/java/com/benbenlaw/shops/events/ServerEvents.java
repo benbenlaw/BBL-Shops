@@ -4,6 +4,7 @@ import com.benbenlaw.shops.Shops;
 import com.benbenlaw.shops.attachments.PlayerBalanceData;
 import com.benbenlaw.shops.attachments.ShopTraderData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
+import com.benbenlaw.shops.datamaps.ShopsDataMaps;
 import com.benbenlaw.shops.entity.ShopsEntityTypes;
 import com.benbenlaw.shops.events.client.ClientRecipeCache;
 import com.benbenlaw.shops.network.packets.OpenShopTraderScreen;
@@ -41,6 +42,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.registries.datamaps.RegisterDataMapTypesEvent;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -117,5 +119,10 @@ public class ServerEvents {
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(ShopsEntityTypes.SHOP_TRADER_VILLAGER.get(), Villager.createAttributes().build());
+    }
+
+    @SubscribeEvent
+    public static void registerDataMaps(RegisterDataMapTypesEvent event) {
+        event.register(ShopsDataMaps.TRADER_NAMES);
     }
 }

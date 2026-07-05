@@ -21,5 +21,6 @@ public class ShopsDataGenerator {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
         generator.addProvider(true, new ShopsModelProvider(packOutput));
+        generator.addProvider(true, new ShopsDataMapsProvider(packOutput, lookupProvider));
     }
 }

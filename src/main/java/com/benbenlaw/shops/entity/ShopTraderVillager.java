@@ -2,7 +2,7 @@ package com.benbenlaw.shops.entity;
 
 import com.benbenlaw.shops.attachments.ShopTraderData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
-import com.benbenlaw.shops.item.CoinItem;
+import com.benbenlaw.shops.datamaps.ShopsDataMaps;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.packets.OpenShopTraderScreen;
 import com.benbenlaw.shops.util.ShopsTags;
@@ -24,6 +24,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.List;
 import java.util.Optional;
 
 public class ShopTraderVillager extends Villager {
@@ -31,19 +32,17 @@ public class ShopTraderVillager extends Villager {
     private static final int JOB_SITE_SEARCH_RADIUS = 8;
     private static final double TETHER_RADIUS = 6.0D;
     private static final double TETHER_RADIUS_SQR = TETHER_RADIUS * TETHER_RADIUS;
-    private static final int TETHER_CHECK_INTERVAL = 40; // 2 seconds
+    private static final int TETHER_CHECK_INTERVAL = 40;
 
     private static final double FOLLOW_RADIUS = 8.0D;
     private static final double FOLLOW_STOP_DISTANCE = 2.0D;
     private static final double FOLLOW_STOP_DISTANCE_SQR = FOLLOW_STOP_DISTANCE * FOLLOW_STOP_DISTANCE;
     private static final double MAX_FOLLOW_DISTANCE_FROM_JOB_SITE = 8.0D;
     private static final double MAX_FOLLOW_DISTANCE_FROM_JOB_SITE_SQR = MAX_FOLLOW_DISTANCE_FROM_JOB_SITE * MAX_FOLLOW_DISTANCE_FROM_JOB_SITE;
-    private static final int FOLLOW_RECOMPUTE_INTERVAL = 10;
     private static final double FOLLOW_SPEED = 0.5D;
 
     public ShopTraderVillager(EntityType<? extends Villager> type, Level level) {
         super(type, level, VillagerType.PLAINS);
-        // Held item is just a visual marker for the bound block, not a real drop.
         this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
     }
 
@@ -75,7 +74,8 @@ public class ShopTraderVillager extends Villager {
     }
 
     private boolean isHoldingCoin(Player player) {
-        return player.getMainHandItem().getItem() instanceof CoinItem || player.getOffhandItem().getItem() instanceof CoinItem;
+        return player.getMainHandItem().is(ShopsItems.GOLD_COIN.get())
+                || player.getOffhandItem().is(ShopsItems.GOLD_COIN.get());
     }
 
     private void followPlayer(Player player) {
@@ -83,7 +83,6 @@ public class ShopTraderVillager extends Villager {
             this.getNavigation().stop();
             return;
         }
-
         this.getNavigation().moveTo(player, FOLLOW_SPEED);
     }
 
@@ -119,7 +118,8 @@ public class ShopTraderVillager extends Villager {
         }
 
         Identifier traderId = BuiltInRegistries.BLOCK.getKey(this.level().getBlockState(jobSite.get()).getBlock());
-        PacketDistributor.sendToPlayer(serverPlayer, new OpenShopTraderScreen(traderId));
+        String traderName = this.getData(ShopsAttachments.SHOP_TRADER_DATA).traderName().orElse("");
+        PacketDistributor.sendToPlayer(serverPlayer, new OpenShopTraderScreen(traderId, traderName));
         return InteractionResult.SUCCESS;
     }
 
@@ -130,7 +130,9 @@ public class ShopTraderVillager extends Villager {
             if (this.level().getBlockState(bound).is(ShopsTags.Blocks.SHOP_TRADER_BLOCKS)) {
                 return Optional.of(bound);
             }
-            this.setData(ShopsAttachments.SHOP_TRADER_DATA, new ShopTraderData(Optional.empty()));
+            this.setData(ShopsAttachments.SHOP_TRADER_DATA, ShopTraderData.EMPTY);
+            this.setCustomName(null);
+            this.setCustomNameVisible(false);
         }
 
         BlockPos origin = this.blockPosition();
@@ -139,11 +141,28 @@ public class ShopTraderVillager extends Villager {
                 origin.offset(JOB_SITE_SEARCH_RADIUS, JOB_SITE_SEARCH_RADIUS, JOB_SITE_SEARCH_RADIUS))) {
             if (this.level().getBlockState(pos).is(ShopsTags.Blocks.SHOP_TRADER_BLOCKS)) {
                 BlockPos bound = pos.immutable();
-                this.setData(ShopsAttachments.SHOP_TRADER_DATA, new ShopTraderData(Optional.of(bound)));
+                Block block = this.level().getBlockState(bound).getBlock();
+                String name = pickTraderName(block);
+
+                this.setData(ShopsAttachments.SHOP_TRADER_DATA, new ShopTraderData(Optional.of(bound), Optional.ofNullable(name)));
+
+                if (name != null) {
+                    this.setCustomName(Component.literal(name));
+                    this.setCustomNameVisible(true);
+                }
+
                 return Optional.of(bound);
             }
         }
 
         return Optional.empty();
+    }
+
+    private String pickTraderName(Block block) {
+        List<String> names = block.builtInRegistryHolder().getData(ShopsDataMaps.TRADER_NAMES);
+        if (names == null || names.isEmpty()) {
+            return null;
+        }
+        return names.get(this.random.nextInt(names.size()));
     }
 }
