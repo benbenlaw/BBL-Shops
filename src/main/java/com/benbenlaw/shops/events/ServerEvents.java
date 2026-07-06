@@ -125,9 +125,4 @@ public class ServerEvents {
     public static void registerDataMaps(RegisterDataMapTypesEvent event) {
         event.register(ShopsDataMaps.TRADER_NAMES);
     }
-
-    @SubscribeEvent
-    public static void registerDataMaps(RegisterDataMapTypesEvent event) {
-        event.register(ShopsDataMaps.TRADER_NAMES);
-    }
 }
