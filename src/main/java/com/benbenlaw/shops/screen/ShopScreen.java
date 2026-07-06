@@ -171,16 +171,32 @@ public class ShopScreen extends Screen {
         placedItems.clear();
 
         Player player = Minecraft.getInstance().player;
-        Set<String> unlocked = player != null
-                ? Set.of(player.getData(ShopsAttachments.PLAYER_BALANCE).stages())
-                : Set.of();
+        String[] unlockedInOrder = player != null
+                ? player.getData(ShopsAttachments.PLAYER_BALANCE).stages()
+                : new String[0];
+        Set<String> unlocked = Set.of(unlockedInOrder);
 
-        Map<String, List<Map.Entry<Identifier, ShopEntryRecipe>>> byTier = new LinkedHashMap<>();
+        Map<String, List<Map.Entry<Identifier, ShopEntryRecipe>>> grouped = new HashMap<>();
         for (Map.Entry<Identifier, ShopEntryRecipe> entry : filteredEntries) {
             String tier = entry.getValue().tier();
             if (!tier.isEmpty() && !unlocked.contains(tier)) continue;
-            byTier.computeIfAbsent(tier, t -> new ArrayList<>()).add(entry);
+            grouped.computeIfAbsent(tier, t -> new ArrayList<>()).add(entry);
         }
+
+        Map<String, List<Map.Entry<Identifier, ShopEntryRecipe>>> byTier = new LinkedHashMap<>();
+
+        if (grouped.containsKey("")) {
+            byTier.put("", grouped.remove(""));
+        }
+
+        for (String stage : unlockedInOrder) {
+            List<Map.Entry<Identifier, ShopEntryRecipe>> entries = grouped.remove(stage);
+            if (entries != null) {
+                byTier.put(stage, entries);
+            }
+        }
+
+        byTier.putAll(grouped);
 
         int currentY = 0;
         for (Map.Entry<String, List<Map.Entry<Identifier, ShopEntryRecipe>>> tierGroup : byTier.entrySet()) {
