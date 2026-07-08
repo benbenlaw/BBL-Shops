@@ -47,6 +47,12 @@ public class ShopTraderMob extends PathfinderMob {
     public ShopTraderMob(EntityType<? extends ShopTraderMob> type, Level level) {
         super(type, level);
         this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
+        this.setPersistenceRequired();
+    }
+
+    @Override
+    public void checkDespawn() {
+        super.checkDespawn();
     }
 
     public static AttributeSupplier.Builder createAttributes() {
