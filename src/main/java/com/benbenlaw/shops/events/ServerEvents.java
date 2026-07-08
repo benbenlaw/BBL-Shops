@@ -80,8 +80,8 @@ public class ServerEvents {
             Player oldPlayer = event.getOriginal();
             Player newPlayer = event.getEntity();
 
-            int count = oldPlayer.getData(ShopsAttachments.PLAYER_BALANCE).getBalance();
-            newPlayer.getData(ShopsAttachments.PLAYER_BALANCE).setBalance(count);
+            PlayerBalanceData oldData = oldPlayer.getData(ShopsAttachments.PLAYER_BALANCE);
+            newPlayer.setData(ShopsAttachments.PLAYER_BALANCE, oldData);
         }
     }
 
@@ -92,7 +92,6 @@ public class ServerEvents {
 
         if (!level.isClientSide()) {
             PlayerBalanceData data = player.getData(ShopsAttachments.PLAYER_BALANCE);
-            data.addStage("stone");
             PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerBalanceToClient(data.getBalance()));
         }
     }
