@@ -230,9 +230,12 @@ public class ShopScreen extends Screen {
 
     private boolean playerHasItem(Player player, ItemStack wanted) {
         if (player == null) return false;
+        int needed = wanted.getCount();
+        int found = 0;
         for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
             if (!stack.isEmpty() && ItemStack.isSameItemSameComponents(stack, wanted)) {
-                return true;
+                found += stack.getCount();
+                if (found >= needed) return true;
             }
         }
         return false;

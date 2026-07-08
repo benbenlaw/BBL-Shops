@@ -49,23 +49,31 @@ public record SellShopItem(Identifier entryId) implements CustomPacketPayload {
         if (entry.sellPrice() <= 0) return;
 
         ItemStack wanted = entry.stack().create();
+        int needed = wanted.getCount();
         Inventory inventory = serverPlayer.getInventory();
 
-        int slotIndex = -1;
+        int available = 0;
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack slotStack = inventory.getItem(i);
             if (!slotStack.isEmpty() && ItemStack.isSameItemSameComponents(slotStack, wanted)) {
-                slotIndex = i;
-                break;
+                available += slotStack.getCount();
             }
         }
 
-        if (slotIndex == -1) {
+        if (available < needed) {
             serverPlayer.sendSystemMessage(Component.literal("You don't have that item to sell."));
             return;
         }
 
-        inventory.removeItem(slotIndex, 1);
+        int remaining = needed;
+        for (int i = 0; i < inventory.getContainerSize() && remaining > 0; i++) {
+            ItemStack slotStack = inventory.getItem(i);
+            if (slotStack.isEmpty() || !ItemStack.isSameItemSameComponents(slotStack, wanted)) continue;
+
+            int take = Math.min(remaining, slotStack.getCount());
+            inventory.removeItem(i, take);
+            remaining -= take;
+        }
 
         PlayerBalanceData data = serverPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get());
         PlayerBalanceData updated = data.addBalance(entry.sellPrice());

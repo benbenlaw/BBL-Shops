@@ -13,6 +13,8 @@
   "tooltip.shops.search_bar": "Search for an item in the shop",
   "tooltip.shops.balance": "%s B Bucks",
 
+  "entity.shops.shop_trader": "Trader Entity",
+
 
 
   "tooltip.shops.bound_to": "This card is bound to %s",

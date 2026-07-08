@@ -1,7 +1,8 @@
 {
   "type": "shops:shop",
   "item": {
-    "id": "minecraft:obsidian"
+    "id": "minecraft:obsidian",
+    "count": 2
   },
   "buy_price": 100,
   "sell_price": 60,
