@@ -21,14 +21,17 @@ public class FollowCoinHolderGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        Optional<BlockPos> jobSite = trader.getOrFindJobSite();
-        if (jobSite.isEmpty()) return false;
-
         Player nearest = trader.level().getNearestPlayer(
                 trader.getX(), trader.getY(), trader.getZ(), trader.followRadius(), false);
 
         if (nearest == null || !trader.isHoldingCoin(nearest)) return false;
-        if (jobSite.get().distSqr(nearest.blockPosition()) > trader.maxFollowDistanceFromJobSite() * trader.maxFollowDistanceFromJobSite()) return false;
+
+        Optional<BlockPos> jobSite = trader.getOrFindJobSite();
+        if (jobSite.isPresent()
+                && jobSite.get().distSqr(nearest.blockPosition())
+                > trader.maxFollowDistanceFromJobSite() * trader.maxFollowDistanceFromJobSite()) {
+            return false;
+        }
 
         this.target = nearest;
         return true;
@@ -40,9 +43,10 @@ public class FollowCoinHolderGoal extends Goal {
         if (!trader.isHoldingCoin(target)) return false;
 
         Optional<BlockPos> jobSite = trader.getOrFindJobSite();
-        if (jobSite.isEmpty()) return false;
+        if (jobSite.isEmpty()) return true;
 
-        return jobSite.get().distSqr(target.blockPosition()) <= trader.maxFollowDistanceFromJobSite() * trader.maxFollowDistanceFromJobSite();
+        return jobSite.get().distSqr(target.blockPosition())
+                <= trader.maxFollowDistanceFromJobSite() * trader.maxFollowDistanceFromJobSite();
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.datamaps.ShopsDataMaps;
 import com.benbenlaw.shops.entity.goal.FollowCoinHolderGoal;
 import com.benbenlaw.shops.entity.goal.ReturnToJobSiteGoal;
+import com.benbenlaw.shops.item.CoinItem;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.packets.OpenShopTraderScreen;
 import com.benbenlaw.shops.util.ShopsTags;
@@ -102,9 +103,15 @@ public class ShopTraderMob extends PathfinderMob {
         ShopTraderData data = this.getData(ShopsAttachments.SHOP_TRADER_DATA);
         if (data.jobSite().isPresent()) {
             BlockPos bound = data.jobSite().get();
-            if (this.level().getBlockState(bound).is(ShopsTags.Blocks.SHOP_TRADER_BLOCKS)) {
+            boolean blockStillValid = this.level().getBlockState(bound).is(ShopsTags.Blocks.SHOP_TRADER_BLOCKS);
+            boolean claimedByAnother = ShopJobSiteClaims.isClaimedByAnother(this.level(), bound, this.getUUID());
+
+            if (blockStillValid && !claimedByAnother) {
+                ShopJobSiteClaims.claim(this.level(), bound, this.getUUID());
                 return Optional.of(bound);
             }
+
+            ShopJobSiteClaims.release(this.level(), bound, this.getUUID());
             this.setData(ShopsAttachments.SHOP_TRADER_DATA, ShopTraderData.EMPTY);
             this.setCustomName(null);
             this.setCustomNameVisible(false);
@@ -114,11 +121,14 @@ public class ShopTraderMob extends PathfinderMob {
         for (BlockPos pos : BlockPos.betweenClosed(
                 origin.offset(-JOB_SITE_SEARCH_RADIUS, -JOB_SITE_SEARCH_RADIUS, -JOB_SITE_SEARCH_RADIUS),
                 origin.offset(JOB_SITE_SEARCH_RADIUS, JOB_SITE_SEARCH_RADIUS, JOB_SITE_SEARCH_RADIUS))) {
-            if (this.level().getBlockState(pos).is(ShopsTags.Blocks.SHOP_TRADER_BLOCKS)) {
+            if (this.level().getBlockState(pos).is(ShopsTags.Blocks.SHOP_TRADER_BLOCKS)
+                    && !ShopJobSiteClaims.isClaimedByAnother(this.level(), pos, this.getUUID())) {
+
                 BlockPos bound = pos.immutable();
                 Block block = this.level().getBlockState(bound).getBlock();
                 String name = pickTraderName(block);
 
+                ShopJobSiteClaims.claim(this.level(), bound, this.getUUID());
                 this.setData(ShopsAttachments.SHOP_TRADER_DATA, new ShopTraderData(Optional.of(bound), Optional.ofNullable(name)));
 
                 if (name != null) {
@@ -133,6 +143,13 @@ public class ShopTraderMob extends PathfinderMob {
         return Optional.empty();
     }
 
+    @Override
+    public void remove(RemovalReason reason) {
+        ShopTraderData data = this.getData(ShopsAttachments.SHOP_TRADER_DATA);
+        data.jobSite().ifPresent(pos -> ShopJobSiteClaims.release(this.level(), pos, this.getUUID()));
+        super.remove(reason);
+    }
+
     private String pickTraderName(Block block) {
         List<String> names = block.builtInRegistryHolder().getData(ShopsDataMaps.TRADER_NAMES);
         if (names == null || names.isEmpty()) {
@@ -142,8 +159,7 @@ public class ShopTraderMob extends PathfinderMob {
     }
 
     public boolean isHoldingCoin(Player player) {
-        return player.getMainHandItem().is(ShopsItems.GOLD_COIN.get())
-                || player.getOffhandItem().is(ShopsItems.GOLD_COIN.get());
+        return player.getMainHandItem().getItem() instanceof CoinItem || player.getOffhandItem().getItem() instanceof CoinItem;
     }
 
     public double followRadius() {
