@@ -51,8 +51,12 @@ public class ShopTraderMob extends PathfinderMob {
     }
 
     @Override
+    public boolean removeWhenFarAway(double distSqr) {
+        return false;
+    }
+
+    @Override
     public void checkDespawn() {
-        super.checkDespawn();
     }
 
     public static AttributeSupplier.Builder createAttributes() {

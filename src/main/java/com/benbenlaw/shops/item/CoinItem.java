@@ -34,13 +34,15 @@ public class CoinItem extends Item {
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (!level.isClientSide()) {
-            player.getItemInHand(hand).shrink(1);
+            int stackSize = player.getItemInHand(hand).getCount();
+            player.getItemInHand(hand).shrink(stackSize);
 
             PlayerBalanceData current = player.getData(ShopsAttachments.PLAYER_BALANCE.get());
-            PlayerBalanceData updated = current.addBalance(value);
-            player.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
+            PlayerBalanceData updated = current.addBalance(value * stackSize);
 
+            player.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
             PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerBalanceToClient(updated.getBalance()));
+
             level.playSound(null, player.blockPosition(), ShopsSounds.COIN_COLLECTED.get(), player.getSoundSource(), 0.5f, 1.0f);
 
             return InteractionResult.SUCCESS;
@@ -55,10 +57,11 @@ public class CoinItem extends Item {
             if (StartUpConfig.autoConsumeCoins.get()) {
                 if (owner instanceof Player player && level.getGameTime() % 20 == 0) {
 
-                    itemStack.shrink(1);
+                    int stackSize = itemStack.getCount();
+                    itemStack.shrink(stackSize);
 
                     PlayerBalanceData current = player.getData(ShopsAttachments.PLAYER_BALANCE.get());
-                    PlayerBalanceData updated = current.addBalance(value);
+                    PlayerBalanceData updated = current.addBalance(value * stackSize);
                     player.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
 
                     PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerBalanceToClient(updated.getBalance()));
