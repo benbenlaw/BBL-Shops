@@ -55,6 +55,12 @@ public record BuyShopItem(Identifier entryId) implements CustomPacketPayload {
         }
 
         PlayerBalanceData updated = data.subtractBalance(entry.buyPrice());
+
+        String unlockStage = entry.unlocksTierWhenBought();
+        if (!unlockStage.isEmpty() && !updated.hasStage(unlockStage)) {
+            updated = updated.addStage(unlockStage);
+        }
+
         serverPlayer.setData(ShopsAttachments.PLAYER_BALANCE.get(), updated);
 
         serverPlayer.connection.send(new ClientboundSoundPacket(

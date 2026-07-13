@@ -16,7 +16,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 
-public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPrice, String tier, int order, Optional<Identifier> trader) implements Recipe<RecipeInput> {
+public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPrice, String tier, int order, Optional<Identifier> trader, String unlocksTierWhenBought, String unlocksTierWhenSold) implements Recipe<RecipeInput> {
 
     public static final MapCodec<ShopEntryRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
@@ -25,7 +25,9 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
                     Codec.INT.fieldOf("sell_price").forGetter(ShopEntryRecipe::sellPrice),
                     Codec.STRING.optionalFieldOf("tier", "").forGetter(ShopEntryRecipe::tier),
                     Codec.INT.optionalFieldOf("order", 0).forGetter(ShopEntryRecipe::order),
-                    Identifier.CODEC.optionalFieldOf("trader").forGetter(ShopEntryRecipe::trader)
+                    Identifier.CODEC.optionalFieldOf("trader").forGetter(ShopEntryRecipe::trader),
+                    Codec.STRING.optionalFieldOf("unlocks_tier_when_bought", "").forGetter(ShopEntryRecipe::unlocksTierWhenBought),
+                    Codec.STRING.optionalFieldOf("unlocks_tier_when_sold", "").forGetter(ShopEntryRecipe::unlocksTierWhenSold)
             ).apply(instance, ShopEntryRecipe::new)
     );
 
@@ -46,7 +48,9 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
         Optional<Identifier> trader = buffer.readBoolean()
                 ? Optional.of(Identifier.STREAM_CODEC.decode(buffer))
                 : Optional.empty();
-        return new ShopEntryRecipe(stack, buyPrice, sellPrice, tier, order, trader);
+        String unlocksTierWhenBought = ByteBufCodecs.STRING_UTF8.decode(buffer);
+        String unlocksTierWhenSold = ByteBufCodecs.STRING_UTF8.decode(buffer);
+        return new ShopEntryRecipe(stack, buyPrice, sellPrice, tier, order, trader, unlocksTierWhenBought, unlocksTierWhenSold);
     }
 
     private static void write(RegistryFriendlyByteBuf buffer, ShopEntryRecipe recipe) {
@@ -57,6 +61,8 @@ public record ShopEntryRecipe(ItemStackTemplate stack, int buyPrice, int sellPri
         buffer.writeVarInt(recipe.order);
         buffer.writeBoolean(recipe.trader.isPresent());
         recipe.trader.ifPresent(id -> Identifier.STREAM_CODEC.encode(buffer, id));
+        ByteBufCodecs.STRING_UTF8.encode(buffer, recipe.unlocksTierWhenBought);
+        ByteBufCodecs.STRING_UTF8.encode(buffer, recipe.unlocksTierWhenSold);
     }
 
     @Override

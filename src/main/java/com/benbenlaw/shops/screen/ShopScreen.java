@@ -66,6 +66,7 @@ public class ShopScreen extends Screen {
     private static final int TIER_HEADER_COLOR = 0xFFFFD700;
     private static final int SCROLLBAR_TRACK_COLOR = 0xFF141414;
     private static final int SCROLLBAR_THUMB_COLOR = 0xFF777777;
+    private static final int UNLOCK_BORDER_COLOR = 0xFFFFD700;
 
     private final List<Map.Entry<Identifier, ShopEntryRecipe>> allEntries;
     private List<Map.Entry<Identifier, ShopEntryRecipe>> filteredEntries;
@@ -87,6 +88,8 @@ public class ShopScreen extends Screen {
     private final List<PlacedHeader> placedHeaders = new ArrayList<>();
     private final List<PlacedItem> placedItems = new ArrayList<>();
     private int totalContentHeight = 0;
+
+    private String[] lastKnownStages = new String[0];
 
     public ShopScreen(Component title, Map<Identifier, ShopEntryRecipe> entries) {
         this(title, entries, null);
@@ -132,7 +135,26 @@ public class ShopScreen extends Screen {
                 .bounds(panelX + panelWidth - PANEL_MARGIN - MODE_BUTTON_WIDTH, footerY, MODE_BUTTON_WIDTH, 20)
                 .build());
 
+        Player player = Minecraft.getInstance().player;
+        lastKnownStages = player != null
+                ? player.getData(ShopsAttachments.PLAYER_BALANCE).stages()
+                : new String[0];
+
         applyFilters();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        Player player = Minecraft.getInstance().player;
+        if (player == null) return;
+
+        String[] currentStages = player.getData(ShopsAttachments.PLAYER_BALANCE).stages();
+        if (!Arrays.equals(lastKnownStages, currentStages)) {
+            lastKnownStages = currentStages;
+            applyFilters();
+        }
     }
 
     private Component modeButtonLabel() {
@@ -214,7 +236,12 @@ public class ShopScreen extends Screen {
                 int row = i / gridColumns;
                 int itemX = col * SLOT_WIDTH;
                 int itemY = currentY + row * SLOT_HEIGHT;
-                placedItems.add(new PlacedItem(entries.get(i), itemX, itemY));
+
+                ShopEntryRecipe recipe = entries.get(i).getValue();
+                String unlockStage = mode == Mode.BUY ? recipe.unlocksTierWhenBought() : recipe.unlocksTierWhenSold();
+                boolean showsUnlockBorder = !unlockStage.isEmpty() && !unlocked.contains(unlockStage);
+
+                placedItems.add(new PlacedItem(entries.get(i), itemX, itemY, showsUnlockBorder));
             }
             int rowCount = (entries.size() + gridColumns - 1) / gridColumns;
             currentY += rowCount * SLOT_HEIGHT + TIER_SPACING;
@@ -303,7 +330,12 @@ public class ShopScreen extends Screen {
                     : playerHasItem(player, stack);
 
             graphics.fill(boxX, boxY, boxX + ITEM_BOX_SIZE, boxY + ITEM_BOX_SIZE, BOX_BACKGROUND);
-            graphics.outline(boxX, boxY, ITEM_BOX_SIZE, ITEM_BOX_SIZE, BOX_BORDER);
+            if (placed.showsUnlockBorder()) {
+                graphics.outline(boxX, boxY, ITEM_BOX_SIZE, ITEM_BOX_SIZE, UNLOCK_BORDER_COLOR);
+                graphics.outline(boxX + 1, boxY + 1, ITEM_BOX_SIZE - 2, ITEM_BOX_SIZE - 2, UNLOCK_BORDER_COLOR);
+            } else {
+                graphics.outline(boxX, boxY, ITEM_BOX_SIZE, ITEM_BOX_SIZE, BOX_BORDER);
+            }
 
             graphics.pose().pushMatrix();
             graphics.pose().translate(boxX + ITEM_BOX_SIZE / 2f, boxY + ITEM_BOX_SIZE / 2f);
@@ -413,5 +445,5 @@ public class ShopScreen extends Screen {
 
     private record PlacedHeader(Component text, int y) {}
 
-    private record PlacedItem(Map.Entry<Identifier, ShopEntryRecipe> entry, int x, int y) {}
+    private record PlacedItem(Map.Entry<Identifier, ShopEntryRecipe> entry, int x, int y, boolean showsUnlockBorder) {}
 }

@@ -5,5 +5,8 @@
   },
   "buy_price": 100,
   "sell_price": 60,
-  "tier": "tier_2"
+  "tier": "tier_2",
+  "unlocks_tier_when_bought": "bought_tier",
+  "unlocks_tier_when_sold": "sell_tier",
+  "trader": "minecraft:crafting_table"
 }

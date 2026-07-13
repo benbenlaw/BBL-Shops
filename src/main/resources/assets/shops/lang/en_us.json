@@ -3,8 +3,6 @@
   "itemGroup.shops": "BBL Shops",
   "menu.shops.shop": "The Big B Bucks Shop",
 
-  ".shops.shop": "The Big B Bucks Shop",
-
   "item.shops.copper_coin": "Copper Coin",
   "item.shops.iron_coin": "Iron Coin",
   "item.shops.gold_coin": "Gold Coin",
@@ -15,12 +13,11 @@
 
   "entity.shops.shop_trader": "Trader Entity",
 
-
-
   "tooltip.shops.bound_to": "This card is bound to %s",
   "tooltip.shops.how_to": "Right Click to bound to your account",
   "tooltip.shops.value": "Worth %s B Bucks",
 
+  "jei.shops.shop": "Buying and Selling",
   "jei.shops.selling_price": "Player Sells for: %s B Bucks",
   "jei.shops.buying_price": "Player Buys for: %s B Bucks",
   "jei.shops.tier": "Requires Tier: %s",

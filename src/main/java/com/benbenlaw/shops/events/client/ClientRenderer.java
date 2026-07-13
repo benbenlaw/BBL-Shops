@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ContainerScreenEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.util.List;
@@ -42,36 +43,30 @@ public class ClientRenderer {
     }
 
     @SubscribeEvent
-    public static void onScreenRenderer(ScreenEvent.Render.Post event) {
-        if (event.getScreen() instanceof InventoryScreen screen) {
-            Player player = event.getScreen().getMinecraft().player;
+    public static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
+        if (event.getContainerScreen() instanceof InventoryScreen screen) {
+            Player player = screen.getMinecraft().player;
             if (player == null) return;
 
             PlayerBalanceData data = player.getData(ShopsAttachments.PLAYER_BALANCE);
 
-            int mouseX = event.getMouseX();
-            int mouseY = event.getMouseY();
-
-            int x = screen.getLeftPos() + screen.getImageWidth() - 18;
-            int y = screen.getTopPos() + 2;
+            int x = screen.getImageWidth() - 18;
+            int y = 2;
             int width = 16;
             int height = 16;
 
-            event.getGuiGraphics().item(ShopsItems.GOLD_COIN.get().getDefaultInstance(), x, y);
+            var graphics = event.getGuiGraphics();
+            graphics.item(ShopsItems.GOLD_COIN.get().getDefaultInstance(), x, y);
 
-            if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
+            int screenX = screen.getLeftPos() + x;
+            int screenY = screen.getTopPos() + y;
+            int mouseX = event.getMouseX();
+            int mouseY = event.getMouseY();
+
+            if (mouseX >= screenX && mouseX <= screenX + width && mouseY >= screenY && mouseY <= screenY + height) {
                 Component tooltipText = Component.translatable("tooltip.shops.balance", data.getBalance());
-                List<ClientTooltipComponent> lines = List.of(
-                        ClientTooltipComponent.create(tooltipText.getVisualOrderText())
-                );
 
-                event.getGuiGraphics().tooltip(
-                        Minecraft.getInstance().font,
-                        lines,
-                        mouseX, mouseY,
-                        DefaultTooltipPositioner.INSTANCE,
-                        null
-                );
+                graphics.setTooltipForNextFrame(tooltipText, mouseX, mouseY);
             }
         }
     }

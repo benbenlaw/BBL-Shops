@@ -56,6 +56,11 @@ public class ShopTraderMob extends PathfinderMob {
     }
 
     @Override
+    public boolean isDiscrete() {
+        return true;
+    }
+
+    @Override
     public void checkDespawn() {
     }
 
