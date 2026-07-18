@@ -268,6 +268,16 @@ public class ShopScreen extends Screen {
         return false;
     }
 
+    private Component displayTitle() {
+        Component suffix = mode == Mode.BUY
+                ? Component.translatable("screen.shops.mode_buy_suffix")
+                : Component.translatable("screen.shops.mode_sell_suffix");
+        return this.getTitle().copy()
+                .append(Component.literal(" ("))
+                .append(suffix)
+                .append(Component.literal(")"));
+    }
+
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractBackground(graphics, mouseX, mouseY, delta);
@@ -279,7 +289,7 @@ public class ShopScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-        graphics.text(Minecraft.getInstance().font, this.getTitle(),
+        graphics.text(Minecraft.getInstance().font, displayTitle(),
                 panelX + PANEL_MARGIN, panelY + 8, 0xFFFFFFFF, true);
 
         Player player = Minecraft.getInstance().player;
@@ -412,13 +422,22 @@ public class ShopScreen extends Screen {
                     && event.y() >= viewportTop && event.y() < viewportBottom) {
 
                 ShopEntryRecipe recipe = placed.entry().getValue();
+                ItemStack tradeStack = recipe.stack().create();
+                int quantity = 1;
+
+                if (Minecraft.getInstance().hasShiftDown()) {
+                    int perTrade = tradeStack.getCount();
+                    int maxStack = tradeStack.getMaxStackSize();
+                    quantity = Math.max(1, maxStack / perTrade);
+                }
+
                 if (mode == Mode.BUY) {
                     if (playerBalance >= recipe.buyPrice()) {
-                        ClientPacketDistributor.sendToServer(new BuyShopItem(placed.entry().getKey()));
+                        ClientPacketDistributor.sendToServer(new BuyShopItem(placed.entry().getKey(), quantity));
                     }
                 } else {
-                    if (playerHasItem(player, recipe.stack().create())) {
-                        ClientPacketDistributor.sendToServer(new SellShopItem(placed.entry().getKey()));
+                    if (playerHasItem(player, tradeStack)) {
+                        ClientPacketDistributor.sendToServer(new SellShopItem(placed.entry().getKey(), quantity));
                     }
                 }
                 return true;

@@ -17,6 +17,9 @@
   "tooltip.shops.how_to": "Right Click to bound to your account",
   "tooltip.shops.value": "Worth %s B Bucks",
 
+  "screen.shops.mode_buy_suffix": "Player Buys",
+  "screen.shops.mode_sell_suffix": "Player Sells",
+
   "jei.shops.shop": "Buying and Selling",
   "jei.shops.selling_price": "Player Sells for: %s B Bucks",
   "jei.shops.buying_price": "Player Buys for: %s B Bucks",
@@ -25,6 +28,10 @@
 
   "jei.shops.selling": "Player Sells",
   "jei.shops.buying": "Player Buys",
+
+  "message.shops.no_sellable_item": "You don't have that item to sell.",
+  "message.shops.not_unlocked": "You haven't unlocked this item yet.",
+  "message.shops.not_enough": "You don't have enough B Bucks",
 
   "tooltip.shops.mode_buy": "Buy",
   "tooltip.shops.mode_sell": "Sell",

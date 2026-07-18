@@ -9,6 +9,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
@@ -24,18 +25,23 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import java.util.Optional;
 
-public record BuyShopItem(Identifier entryId) implements CustomPacketPayload {
+public record BuyShopItem(Identifier entryId, int quantity) implements CustomPacketPayload {
+
+    private static final int MAX_QUANTITY = 1000;
 
     public static final Type<BuyShopItem> TYPE =
             new Type<>(Identifier.fromNamespaceAndPath(Shops.MOD_ID, "buy_shop_item"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, BuyShopItem> STREAM_CODEC = StreamCodec.composite(
             Identifier.STREAM_CODEC, BuyShopItem::entryId,
+            ByteBufCodecs.VAR_INT, BuyShopItem::quantity,
             BuyShopItem::new
     );
 
     public static final IPayloadHandler<BuyShopItem> HANDLER = (packet, context) -> {
         if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
+
+        int requestedQuantity = Mth_clamp(packet.quantity(), 1, MAX_QUANTITY);
 
         Optional<RecipeHolder<?>> maybeHolder = Optional.ofNullable(serverPlayer.level().recipeAccess().recipeMap()
                 .byKey(ResourceKey.create(Registries.RECIPE, packet.entryId())));
@@ -45,16 +51,22 @@ public record BuyShopItem(Identifier entryId) implements CustomPacketPayload {
         PlayerBalanceData data = serverPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get());
 
         if (!entry.tier().isEmpty() && !data.hasStage(entry.tier())) {
-            serverPlayer.sendSystemMessage(Component.literal("You haven't unlocked this item yet."));
+            serverPlayer.sendSystemMessage(Component.translatable("message.shops.not_unlocked"));
             return;
         }
 
-        if (data.getBalance() < entry.buyPrice()) {
-            serverPlayer.sendSystemMessage(Component.literal("You don't have enough balance."));
+        if (entry.buyPrice() <= 0) return;
+
+        int affordable = data.getBalance() / entry.buyPrice();
+        int actualQuantity = Math.min(requestedQuantity, affordable);
+
+        if (actualQuantity <= 0) {
+            serverPlayer.sendSystemMessage(Component.translatable("message.shops.not_enough"));
             return;
         }
 
-        PlayerBalanceData updated = data.subtractBalance(entry.buyPrice());
+        int totalCost = entry.buyPrice() * actualQuantity;
+        PlayerBalanceData updated = data.subtractBalance(totalCost);
 
         String unlockStage = entry.unlocksTierWhenBought();
         if (!unlockStage.isEmpty() && !updated.hasStage(unlockStage)) {
@@ -79,12 +91,18 @@ public record BuyShopItem(Identifier entryId) implements CustomPacketPayload {
         ));
 
         ItemStack stack = entry.stack().create().copy();
+        stack.setCount(stack.getCount() * actualQuantity);
+
         if (!serverPlayer.getInventory().add(stack)) {
             serverPlayer.drop(stack, false);
         }
 
         PacketDistributor.sendToPlayer(serverPlayer, new SyncPlayerBalanceToClient(updated.getBalance()));
     };
+
+    private static int Mth_clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

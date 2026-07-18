@@ -9,6 +9,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
@@ -17,7 +18,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -26,30 +26,33 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import java.util.Optional;
 
-public record SellShopItem(Identifier entryId) implements CustomPacketPayload {
+public record SellShopItem(Identifier entryId, int quantity) implements CustomPacketPayload {
+
+    private static final int MAX_QUANTITY = 1000;
 
     public static final Type<SellShopItem> TYPE =
             new Type<>(Identifier.fromNamespaceAndPath(Shops.MOD_ID, "sell_shop_item"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SellShopItem> STREAM_CODEC = StreamCodec.composite(
             Identifier.STREAM_CODEC, SellShopItem::entryId,
+            ByteBufCodecs.VAR_INT, SellShopItem::quantity,
             SellShopItem::new
     );
 
     public static final IPayloadHandler<SellShopItem> HANDLER = (packet, context) -> {
         if (!(context.player() instanceof ServerPlayer serverPlayer)) return;
 
+        int requestedQuantity = Math.clamp(packet.quantity(), 1, MAX_QUANTITY);
 
         Optional<RecipeHolder<?>> maybeHolder = Optional.ofNullable(serverPlayer.level().recipeAccess().recipeMap()
                 .byKey(ResourceKey.create(Registries.RECIPE, packet.entryId())));
-
 
         if (maybeHolder.isEmpty() || !(maybeHolder.get().value() instanceof ShopEntryRecipe entry)) return;
 
         if (entry.sellPrice() <= 0) return;
 
         ItemStack wanted = entry.stack().create();
-        int needed = wanted.getCount();
+        int perTrade = wanted.getCount();
         Inventory inventory = serverPlayer.getInventory();
 
         int available = 0;
@@ -60,12 +63,15 @@ public record SellShopItem(Identifier entryId) implements CustomPacketPayload {
             }
         }
 
-        if (available < needed) {
-            serverPlayer.sendSystemMessage(Component.literal("You don't have that item to sell."));
+        int affordableTrades = available / perTrade;
+        int actualQuantity = Math.min(requestedQuantity, affordableTrades);
+
+        if (actualQuantity <= 0) {
+            serverPlayer.sendSystemMessage(Component.translatable("message.shops.no_sellable_item"));
             return;
         }
 
-        int remaining = needed;
+        int remaining = perTrade * actualQuantity;
         for (int i = 0; i < inventory.getContainerSize() && remaining > 0; i++) {
             ItemStack slotStack = inventory.getItem(i);
             if (slotStack.isEmpty() || !ItemStack.isSameItemSameComponents(slotStack, wanted)) continue;
@@ -76,7 +82,7 @@ public record SellShopItem(Identifier entryId) implements CustomPacketPayload {
         }
 
         PlayerBalanceData data = serverPlayer.getData(ShopsAttachments.PLAYER_BALANCE.get());
-        PlayerBalanceData updated = data.addBalance(entry.sellPrice());
+        PlayerBalanceData updated = data.addBalance(entry.sellPrice() * actualQuantity);
 
         String unlockStage = entry.unlocksTierWhenSold();
         if (!unlockStage.isEmpty() && !updated.hasStage(unlockStage)) {
