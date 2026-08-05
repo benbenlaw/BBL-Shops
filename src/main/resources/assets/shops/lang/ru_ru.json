@@ -1,0 +1,37 @@
+{
+
+  "itemGroup.shops": "BBL Shops",
+  "item.shops.copper_coin": "Медная монета",
+  "item.shops.iron_coin": "Железная монета",
+  "item.shops.gold_coin": "Золотая монета",
+  "item.shops.player_balance_card": "Баланс-карта",
+  "item.shops.pinata_flare": "Призыв пиньяты",
+  "item.shops.crate_flare": "Призыв ящика",
+
+  "item.shops.pinata_flare.mineshaft": "Тип пиньяты: заброшенная шахта",
+
+  "block.shops.shop": "Магазин",
+  "tooltip.shops.balance": "Баланс: %s Б-Баксов",
+  "tooltip.shops.shift": "SHIFT для доп. информации",
+  "tooltip.shops.bound_to": "Данная карта привязана к игроку %s",
+  "tooltip.shops.how_to": "Чтобы привязать свой аккаунт, нажмите ПКМ",
+  "tooltip.shops.value": "Стоит %s Б-Баксов",
+
+  "jei.shops.selling_price": "Продаётся за %s Б-Баксов",
+  "jei.shops.buying_price": "Можно купить за %s Б-Баксов",
+  "jei.shops.selling": "Игрок продаёт",
+  "jei.shops.buying": "Игрок покупает",
+
+  "block.shops.shop.player_balance_card": "Баланс-карта",
+  "block.shops.shop.selling_input": "Предмет для продажи",
+  "block.shops.shop.catalog": "Каталог",
+  "block.shops.shop.output": "Товары",
+  "block.shops.shop.auto_produce": "Чтобы пометить предмет для автопокупки, нажмите по нему ПКМ",
+
+  "entity.shops.pinata_interact": "Прошу, не бей меня! Клянусь, я пуст!",
+  "entity.shops.pinata_hit": "Чтобы это открыть мне понадобится палка или стержень...",
+  "entity.shops.pinata": "Пиньята",
+  "entity.shops.crate": "Ящик",
+
+  "sounds.shops.coin_collected": "Собрана монета"
+}
