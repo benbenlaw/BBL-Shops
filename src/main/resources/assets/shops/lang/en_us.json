@@ -47,5 +47,8 @@
   "entity.shops.pinata": "Pinata",
   "entity.shops.crate": "Crate",
 
-  "sounds.shops.coin_collected": "Coin Collected"
+  "sounds.shops.coin_collected": "Coin Collected",
+
+  "key.category.shops.shops": "BBL Shops",
+  "key.shops.shop_open_key": "Open Shop Screen"
 }
