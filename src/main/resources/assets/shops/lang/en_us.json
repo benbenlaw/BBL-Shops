@@ -10,6 +10,8 @@
   "tooltip.shops.shift": "Press SHIFT for more info",
   "tooltip.shops.search_bar": "Search for an item in the shop",
   "tooltip.shops.balance": "%s B Bucks",
+  "tooltip.shops.shift_sell": "Shift Click to sell up to a stack of this Item",
+  "tooltip.shops.control_shift_sell": "Control + Shift Click to sell ALL of this Item",
 
   "entity.shops.shop_trader": "Trader Entity",
 

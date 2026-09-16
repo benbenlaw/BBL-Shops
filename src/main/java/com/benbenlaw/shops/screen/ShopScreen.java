@@ -7,7 +7,6 @@ import com.benbenlaw.shops.network.packets.SellShopItem;
 import com.benbenlaw.shops.recipe.ShopEntryRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -45,10 +44,13 @@ public class ShopScreen extends Screen {
 
     private static final int PANEL_MARGIN = 10;
     private static final int TITLE_HEIGHT = 20;
-    private static final int FOOTER_HEIGHT = 26;
     private static final int SCREEN_PADDING = 20;
     private static final int SCROLLBAR_WIDTH = 4;
-    private static final int MODE_BUTTON_WIDTH = 50;
+
+    private static final int TAB_HEIGHT = 20;
+    private static final int SEARCH_HEIGHT = 20;
+    private static final int SEARCH_SPACING = 6;
+    private static final int TOP_CHROME_HEIGHT = TITLE_HEIGHT + TAB_HEIGHT + SEARCH_SPACING + SEARCH_HEIGHT + SEARCH_SPACING;
 
     private static final int PANEL_BACKGROUND = 0xFF1E1E1E;
     private static final int PANEL_BORDER = 0xFF444444;
@@ -68,6 +70,12 @@ public class ShopScreen extends Screen {
     private static final int SCROLLBAR_THUMB_COLOR = 0xFF777777;
     private static final int UNLOCK_BORDER_COLOR = 0xFFFFD700;
 
+    private static final int TAB_ACTIVE_COLOR = 0xFF2B2B2B;
+    private static final int TAB_INACTIVE_COLOR = 0xFF181818;
+    private static final int TAB_BORDER_COLOR = 0xFF444444;
+    private static final int TAB_ACTIVE_TEXT_COLOR = 0xFFFFFFFF;
+    private static final int TAB_INACTIVE_TEXT_COLOR = 0xFF999999;
+
     private final List<Map.Entry<Identifier, ShopEntryRecipe>> allEntries;
     private List<Map.Entry<Identifier, ShopEntryRecipe>> filteredEntries;
     private final Identifier traderFilter;
@@ -84,6 +92,10 @@ public class ShopScreen extends Screen {
     private int panelHeight;
     private int gridX;
     private int gridY;
+
+    private int tabsX;
+    private int tabsY;
+    private int tabWidth;
 
     private final List<PlacedHeader> placedHeaders = new ArrayList<>();
     private final List<PlacedItem> placedItems = new ArrayList<>();
@@ -107,33 +119,32 @@ public class ShopScreen extends Screen {
         super.init();
 
         int availableWidth = Math.max(width - SCREEN_PADDING * 2, SLOT_WIDTH * MIN_COLUMNS);
-        int availableHeight = Math.max(height - SCREEN_PADDING * 2, SLOT_HEIGHT * MIN_VIEWPORT_ROWS + TITLE_HEIGHT + FOOTER_HEIGHT);
+        int availableHeight = Math.max(height - SCREEN_PADDING * 2, SLOT_HEIGHT * MIN_VIEWPORT_ROWS + TOP_CHROME_HEIGHT);
 
         gridColumns = Mth.clamp((availableWidth - PANEL_MARGIN * 2) / SLOT_WIDTH, MIN_COLUMNS, MAX_COLUMNS);
-        int viewportRows = Mth.clamp((availableHeight - PANEL_MARGIN * 2 - TITLE_HEIGHT - FOOTER_HEIGHT) / SLOT_HEIGHT, MIN_VIEWPORT_ROWS, MAX_VIEWPORT_ROWS);
+        int viewportRows = Mth.clamp((availableHeight - PANEL_MARGIN * 2 - TOP_CHROME_HEIGHT) / SLOT_HEIGHT, MIN_VIEWPORT_ROWS, MAX_VIEWPORT_ROWS);
 
         panelWidth = gridColumns * SLOT_WIDTH - SLOT_SPACING + PANEL_MARGIN * 2;
-        panelHeight = viewportRows * SLOT_HEIGHT - SLOT_SPACING + PANEL_MARGIN * 2 + TITLE_HEIGHT + FOOTER_HEIGHT;
+        panelHeight = viewportRows * SLOT_HEIGHT - SLOT_SPACING + PANEL_MARGIN * 2 + TOP_CHROME_HEIGHT;
 
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
 
+        tabsX = panelX + PANEL_MARGIN;
+        tabsY = panelY + PANEL_MARGIN + TITLE_HEIGHT;
+        tabWidth = (panelWidth - PANEL_MARGIN * 2) / 2;
+
+        int searchY = tabsY + TAB_HEIGHT + SEARCH_SPACING;
+
         gridX = panelX + PANEL_MARGIN;
-        gridY = panelY + PANEL_MARGIN + TITLE_HEIGHT;
+        gridY = searchY + SEARCH_HEIGHT + SEARCH_SPACING;
         gridViewportHeight = viewportRows * SLOT_HEIGHT - SLOT_SPACING;
 
-        int footerY = panelY + panelHeight - FOOTER_HEIGHT - 3;
-        int searchWidth = panelWidth - PANEL_MARGIN * 2 - MODE_BUTTON_WIDTH - 4;
-
         EditBox searchBox = new EditBox(Minecraft.getInstance().font,
-                panelX + PANEL_MARGIN, footerY, searchWidth, 20, Component.literal("Search"));
+                panelX + PANEL_MARGIN, searchY, panelWidth - PANEL_MARGIN * 2, SEARCH_HEIGHT, Component.literal("Search"));
         searchBox.setTooltip(Tooltip.create(Component.translatable("tooltip.shops.search_bar")));
         searchBox.setResponder(this::onSearchChanged);
         addRenderableWidget(searchBox);
-
-        addRenderableWidget(Button.builder(modeButtonLabel(), b -> toggleMode(b))
-                .bounds(panelX + panelWidth - PANEL_MARGIN - MODE_BUTTON_WIDTH, footerY, MODE_BUTTON_WIDTH, 20)
-                .build());
 
         Player player = Minecraft.getInstance().player;
         lastKnownStages = player != null
@@ -157,17 +168,17 @@ public class ShopScreen extends Screen {
         }
     }
 
-    private Component modeButtonLabel() {
-        return mode == Mode.BUY
-                ? Component.translatable("tooltip.shops.mode_buy")
-                : Component.translatable("tooltip.shops.mode_sell");
-    }
-
-    private void toggleMode(Button button) {
-        mode = (mode == Mode.BUY) ? Mode.SELL : Mode.BUY;
-        button.setMessage(modeButtonLabel());
+    private void setMode(Mode newMode) {
+        if (mode == newMode) return;
+        mode = newMode;
         scrollOffset = 0;
         applyFilters();
+    }
+
+    private Component tabLabel(Mode m) {
+        return m == Mode.BUY
+                ? Component.translatable("tooltip.shops.mode_buy")
+                : Component.translatable("tooltip.shops.mode_sell");
     }
 
     private void onSearchChanged(String value) {
@@ -268,14 +279,19 @@ public class ShopScreen extends Screen {
         return false;
     }
 
+    private int countMatchingItems(Player player, ItemStack wanted) {
+        if (player == null) return 0;
+        int count = 0;
+        for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+            if (!stack.isEmpty() && ItemStack.isSameItemSameComponents(stack, wanted)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
     private Component displayTitle() {
-        Component suffix = mode == Mode.BUY
-                ? Component.translatable("screen.shops.mode_buy_suffix")
-                : Component.translatable("screen.shops.mode_sell_suffix");
-        return this.getTitle().copy()
-                .append(Component.literal(" ("))
-                .append(suffix)
-                .append(Component.literal(")"));
+        return this.getTitle();
     }
 
     @Override
@@ -306,6 +322,23 @@ public class ShopScreen extends Screen {
         graphics.item(ShopsItems.GOLD_COIN.get().getDefaultInstance(), balanceX, balanceIconY);
         graphics.text(Minecraft.getInstance().font, balanceText,
                 balanceX + balanceIconWidth + 4, panelY + 8, 0xFFFFFFFF, true);
+
+        boolean buyActive = mode == Mode.BUY;
+        int sellTabX = tabsX + tabWidth;
+
+        graphics.fill(tabsX, tabsY, tabsX + tabWidth, tabsY + TAB_HEIGHT, buyActive ? TAB_ACTIVE_COLOR : TAB_INACTIVE_COLOR);
+        graphics.fill(sellTabX, tabsY, sellTabX + tabWidth, tabsY + TAB_HEIGHT, !buyActive ? TAB_ACTIVE_COLOR : TAB_INACTIVE_COLOR);
+        graphics.outline(tabsX, tabsY, tabWidth, TAB_HEIGHT, TAB_BORDER_COLOR);
+        graphics.outline(sellTabX, tabsY, tabWidth, TAB_HEIGHT, TAB_BORDER_COLOR);
+
+        int underlineY = tabsY + TAB_HEIGHT - 2;
+        int activeTabX = buyActive ? tabsX : sellTabX;
+        graphics.fill(activeTabX, underlineY, activeTabX + tabWidth, tabsY + TAB_HEIGHT, buyActive ? BUY_BUTTON_COLOR : SELL_BUTTON_COLOR);
+
+        graphics.centeredText(Minecraft.getInstance().font, tabLabel(Mode.BUY),
+                tabsX + tabWidth / 2, tabsY + 6, buyActive ? TAB_ACTIVE_TEXT_COLOR : TAB_INACTIVE_TEXT_COLOR);
+        graphics.centeredText(Minecraft.getInstance().font, tabLabel(Mode.SELL),
+                sellTabX + tabWidth / 2, tabsY + 6, !buyActive ? TAB_ACTIVE_TEXT_COLOR : TAB_INACTIVE_TEXT_COLOR);
 
         int viewportTop = gridY;
         int viewportBottom = gridY + gridViewportHeight;
@@ -407,6 +440,17 @@ public class ShopScreen extends Screen {
         int viewportTop = gridY;
         int viewportBottom = gridY + gridViewportHeight;
 
+        int sellTabX = tabsX + tabWidth;
+        if (event.y() >= tabsY && event.y() < tabsY + TAB_HEIGHT) {
+            if (event.x() >= tabsX && event.x() < sellTabX) {
+                setMode(Mode.BUY);
+                return true;
+            } else if (event.x() >= sellTabX && event.x() < sellTabX + tabWidth) {
+                setMode(Mode.SELL);
+                return true;
+            }
+        }
+
         Player player = Minecraft.getInstance().player;
         int playerBalance = player != null ? player.getData(ShopsAttachments.PLAYER_BALANCE).getBalance() : 0;
 
@@ -423,12 +467,18 @@ public class ShopScreen extends Screen {
 
                 ShopEntryRecipe recipe = placed.entry().getValue();
                 ItemStack tradeStack = recipe.stack().create();
+                int perTrade = tradeStack.getCount();
                 int quantity = 1;
 
-                if (Minecraft.getInstance().hasShiftDown()) {
-                    int perTrade = tradeStack.getCount();
+                boolean shiftHeld = Minecraft.getInstance().hasShiftDown();
+                boolean controlHeld = Minecraft.getInstance().hasControlDown();
+
+                if (mode == Mode.SELL && shiftHeld && controlHeld) {
+                    int totalOwned = countMatchingItems(player, tradeStack);
+                    quantity = Math.min(totalOwned, perTrade);
+                } else if (mode == Mode.SELL && shiftHeld) {
                     int maxStack = tradeStack.getMaxStackSize();
-                    quantity = Math.max(1, maxStack / perTrade);
+                    quantity = Math.min(maxStack, perTrade);
                 }
 
                 if (mode == Mode.BUY) {

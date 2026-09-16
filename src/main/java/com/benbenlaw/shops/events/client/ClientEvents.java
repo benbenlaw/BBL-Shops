@@ -8,6 +8,7 @@ import com.benbenlaw.shops.screen.ShopScreen;
 import com.benbenlaw.shops.util.KeyBinds;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.entity.VillagerRenderer;
@@ -61,9 +62,10 @@ public class ClientEvents {
 
         Screen currentScreen = mc.screen;
 
+        boolean isUnbound = KeyBinds.SHOP_OPEN_HOTKEY.isUnbound();
         boolean shopKey = event.getKey() == KeyBinds.SHOP_OPEN_HOTKEY.getKey().getValue();
 
-        if (shopKey) {
+        if (shopKey && !isUnbound) {
             if (currentScreen instanceof ShopScreen) {
                 currentScreen.onClose();
             } else {
