@@ -5,6 +5,7 @@ import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.packets.BuyShopItem;
 import com.benbenlaw.shops.network.packets.SellShopItem;
 import com.benbenlaw.shops.recipe.ShopEntryRecipe;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
@@ -429,6 +430,13 @@ public class ShopScreen extends Screen {
             List<ClientTooltipComponent> lines = new ArrayList<>();
             for (Component line : Screen.getTooltipFromItem(Minecraft.getInstance(), stack)) {
                 lines.add(ClientTooltipComponent.create(line.getVisualOrderText()));
+                if (mode == Mode.SELL) {
+                    lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.shift_sell")
+                            .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
+
+                    lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.control_shift_sell")
+                            .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
+                }
             }
 
             graphics.tooltip(Minecraft.getInstance().font, lines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null, stack);
@@ -474,11 +482,15 @@ public class ShopScreen extends Screen {
                 boolean controlHeld = Minecraft.getInstance().hasControlDown();
 
                 if (mode == Mode.SELL && shiftHeld && controlHeld) {
+                    // Ctrl+Shift: sell every matching item the player owns
                     int totalOwned = countMatchingItems(player, tradeStack);
-                    quantity = Math.min(totalOwned, perTrade);
+                    quantity = perTrade > 0 ? Math.max(1, totalOwned / perTrade) : 1;
                 } else if (mode == Mode.SELL && shiftHeld) {
+                    // Shift: sell up to a full stack (capped by what the player actually owns)
+                    int totalOwned = countMatchingItems(player, tradeStack);
                     int maxStack = tradeStack.getMaxStackSize();
-                    quantity = Math.min(maxStack, perTrade);
+                    int target = Math.min(maxStack, totalOwned);
+                    quantity = perTrade > 0 ? Math.max(1, target / perTrade) : 1;
                 }
 
                 if (mode == Mode.BUY) {
