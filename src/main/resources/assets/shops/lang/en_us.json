@@ -12,6 +12,8 @@
   "tooltip.shops.balance": "%s B Bucks",
   "tooltip.shops.shift_sell": "Shift Click to sell up to a stack of this Item",
   "tooltip.shops.control_shift_sell": "Control + Shift Click to sell ALL of this Item",
+  "tooltip.shops.shift_buy": "Shift Click to buy up to a stack of this Item",
+  "tooltip.shops.control_shift_buy": "Control + Shift Click to buy as many as you can afford and hold",
 
   "entity.shops.shop_trader": "Trader Entity",
 

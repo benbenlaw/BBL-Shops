@@ -84,6 +84,7 @@ public class ShopScreen extends Screen {
     private String searchText = "";
     private int scrollOffset = 0;
     private Mode mode = Mode.BUY;
+    private boolean draggingScrollbar = false;
 
     private int gridColumns;
     private int gridViewportHeight;
@@ -267,6 +268,29 @@ public class ShopScreen extends Screen {
         return Math.max(0, totalContentHeight - gridViewportHeight);
     }
 
+    private int scrollThumbHeight() {
+        return Math.max(10, gridViewportHeight * gridViewportHeight / totalContentHeight);
+    }
+
+    private int scrollbarTrackX() {
+        return gridX + gridColumns * SLOT_WIDTH - SLOT_SPACING + 4;
+    }
+
+    private void scrollToMouseY(double mouseY) {
+        int maxScroll = maxScroll();
+        if (maxScroll <= 0) return;
+
+        int thumbHeight = scrollThumbHeight();
+        int trackRange = gridViewportHeight - thumbHeight;
+        if (trackRange <= 0) {
+            scrollOffset = 0;
+            return;
+        }
+
+        double relative = (mouseY - gridY - thumbHeight / 2.0) / trackRange;
+        scrollOffset = Mth.clamp((int) Math.round(relative * maxScroll), 0, maxScroll);
+    }
+
     private boolean playerHasItem(Player player, ItemStack wanted) {
         if (player == null) return false;
         int needed = wanted.getCount();
@@ -289,6 +313,20 @@ public class ShopScreen extends Screen {
             }
         }
         return count;
+    }
+
+    private int inventorySpaceFor(Player player, ItemStack wanted) {
+        if (player == null) return 0;
+        int maxStack = wanted.getMaxStackSize();
+        int space = 0;
+        for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+            if (stack.isEmpty()) {
+                space += maxStack;
+            } else if (ItemStack.isSameItemSameComponents(stack, wanted)) {
+                space += Math.max(0, maxStack - stack.getCount());
+            }
+        }
+        return space;
     }
 
     private Component displayTitle() {
@@ -415,10 +453,10 @@ public class ShopScreen extends Screen {
         graphics.disableScissor();
 
         if (maxScroll() > 0) {
-            int trackX = gridX + gridColumns * SLOT_WIDTH - SLOT_SPACING + 4;
+            int trackX = scrollbarTrackX();
             graphics.fill(trackX, viewportTop, trackX + SCROLLBAR_WIDTH, viewportBottom, SCROLLBAR_TRACK_COLOR);
 
-            int thumbHeight = Math.max(10, gridViewportHeight * gridViewportHeight / totalContentHeight);
+            int thumbHeight = scrollThumbHeight();
             int thumbY = viewportTop + (gridViewportHeight - thumbHeight) * scrollOffset / maxScroll();
             graphics.fill(trackX, thumbY, trackX + SCROLLBAR_WIDTH, thumbY + thumbHeight, SCROLLBAR_THUMB_COLOR);
         }
@@ -430,14 +468,15 @@ public class ShopScreen extends Screen {
             List<ClientTooltipComponent> lines = new ArrayList<>();
             for (Component line : Screen.getTooltipFromItem(Minecraft.getInstance(), stack)) {
                 lines.add(ClientTooltipComponent.create(line.getVisualOrderText()));
-                if (mode == Mode.SELL) {
-                    lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.shift_sell")
-                            .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
-
-                    lines.add(ClientTooltipComponent.create(Component.translatable("tooltip.shops.control_shift_sell")
-                            .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
-                }
             }
+
+            String shiftKey = mode == Mode.BUY ? "tooltip.shops.shift_buy" : "tooltip.shops.shift_sell";
+            String controlShiftKey = mode == Mode.BUY ? "tooltip.shops.control_shift_buy" : "tooltip.shops.control_shift_sell";
+
+            lines.add(ClientTooltipComponent.create(Component.translatable(shiftKey)
+                    .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
+            lines.add(ClientTooltipComponent.create(Component.translatable(controlShiftKey)
+                    .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
 
             graphics.tooltip(Minecraft.getInstance().font, lines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null, stack);
         }
@@ -455,6 +494,16 @@ public class ShopScreen extends Screen {
                 return true;
             } else if (event.x() >= sellTabX && event.x() < sellTabX + tabWidth) {
                 setMode(Mode.SELL);
+                return true;
+            }
+        }
+
+        if (maxScroll() > 0) {
+            int trackX = scrollbarTrackX();
+            if (event.x() >= trackX && event.x() < trackX + SCROLLBAR_WIDTH
+                    && event.y() >= viewportTop && event.y() < viewportBottom) {
+                draggingScrollbar = true;
+                scrollToMouseY(event.y());
                 return true;
             }
         }
@@ -491,6 +540,19 @@ public class ShopScreen extends Screen {
                     int maxStack = tradeStack.getMaxStackSize();
                     int target = Math.min(maxStack, totalOwned);
                     quantity = perTrade > 0 ? Math.max(1, target / perTrade) : 1;
+                } else if (mode == Mode.BUY && shiftHeld && controlHeld) {
+                    // Ctrl+Shift: buy as many as the player can afford and has inventory space for
+                    int affordableItems = recipe.buyPrice() > 0 ? (playerBalance / recipe.buyPrice()) * perTrade : 0;
+                    int spaceItems = inventorySpaceFor(player, tradeStack);
+                    int target = Math.min(affordableItems, spaceItems);
+                    quantity = perTrade > 0 ? Math.max(1, target / perTrade) : 1;
+                } else if (mode == Mode.BUY && shiftHeld) {
+                    // Shift: buy up to a full stack (capped by affordability and inventory space)
+                    int affordableItems = recipe.buyPrice() > 0 ? (playerBalance / recipe.buyPrice()) * perTrade : 0;
+                    int spaceItems = inventorySpaceFor(player, tradeStack);
+                    int maxStack = tradeStack.getMaxStackSize();
+                    int target = Math.min(maxStack, Math.min(affordableItems, spaceItems));
+                    quantity = perTrade > 0 ? Math.max(1, target / perTrade) : 1;
                 }
 
                 if (mode == Mode.BUY) {
@@ -507,6 +569,24 @@ public class ShopScreen extends Screen {
         }
 
         return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (draggingScrollbar) {
+            scrollToMouseY(event.y());
+            return true;
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (draggingScrollbar) {
+            draggingScrollbar = false;
+            return true;
+        }
+        return super.mouseReleased(event);
     }
 
     @Override
