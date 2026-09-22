@@ -4,6 +4,7 @@ import com.benbenlaw.shops.Shops;
 import com.benbenlaw.shops.attachments.PlayerBalanceData;
 import com.benbenlaw.shops.attachments.ShopTraderData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
+import com.benbenlaw.shops.block.ShopsBlockEntities;
 import com.benbenlaw.shops.datamaps.ShopsDataMaps;
 import com.benbenlaw.shops.entity.ShopsEntityTypes;
 import com.benbenlaw.shops.events.client.ClientRecipeCache;
@@ -35,6 +36,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RecipesReceivedEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
@@ -123,5 +126,14 @@ public class ServerEvents {
     @SubscribeEvent
     public static void registerDataMaps(RegisterDataMapTypesEvent event) {
         event.register(ShopsDataMaps.TRADER_NAMES);
+    }
+
+
+    @SubscribeEvent
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+
+        event.registerBlockEntity(Capabilities.Item.BLOCK, ShopsBlockEntities.SHOP_BLOCK_ENTITY.get(),
+                (blockEntity, side) -> blockEntity.getItemHandler());
+
     }
 }

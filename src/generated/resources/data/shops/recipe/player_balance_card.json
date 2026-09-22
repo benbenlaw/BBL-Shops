@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "shops",
+  "key": {
+    "A": "minecraft:paper",
+    "B": "shops:copper_coin"
+  },
+  "pattern": [
+    " A ",
+    "ABA",
+    " A "
+  ],
+  "result": {
+    "id": "shops:player_balance_card"
+  }
+}

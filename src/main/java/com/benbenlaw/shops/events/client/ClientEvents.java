@@ -1,9 +1,14 @@
 package com.benbenlaw.shops.events.client;
 
 import com.benbenlaw.shops.Shops;
+import com.benbenlaw.shops.block.ShopsBlocks;
+import com.benbenlaw.shops.component.ShopsDataComponents;
 import com.benbenlaw.shops.entity.ShopsEntityTypes;
 import com.benbenlaw.shops.entity.renderer.ShopTraderVillagerRenderer;
 import com.benbenlaw.shops.item.CoinItem;
+import com.benbenlaw.shops.item.PlayerBalanceCardItem;
+import com.benbenlaw.shops.screen.ShopsBlockScreen;
+import com.benbenlaw.shops.screen.ShopsMenuTypes;
 import com.benbenlaw.shops.screen.ShopScreen;
 import com.benbenlaw.shops.util.KeyBinds;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -21,6 +26,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 @EventBusSubscriber(modid = Shops.MOD_ID, value = Dist.CLIENT)
@@ -33,6 +39,21 @@ public class ClientEvents {
 
         if (stack.getItem() instanceof CoinItem coinItem) {
             addShiftTooltip(stack, event, coinItem, "tooltip.shops.value", String.valueOf(coinItem.getValue()));
+        }
+
+        if (stack.getItem() instanceof PlayerBalanceCardItem card) {
+            ShopsDataComponents.BoundPlayer bound = stack.get(ShopsDataComponents.BOUND_PLAYER.get());
+
+            if (bound != null) {
+                addShiftTooltip(stack, event, card, "tooltip.shops.bound_to", String.valueOf(bound.name()));
+            }
+            else {
+                addShiftTooltip(stack, event, card, "tooltip.shops.how_to");
+            }
+        }
+
+        if (stack.is(ShopsBlocks.SHOP_BLOCK.get().asItem())) {
+            addShiftTooltip(stack, event, stack.getItem(), "tooltip.shops.shop_block_info");
         }
     }
 
@@ -77,6 +98,11 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onKeyInput(RegisterKeyMappingsEvent event) {
         event.register(KeyBinds.SHOP_OPEN_HOTKEY);
+    }
+
+    @SubscribeEvent
+    public static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(ShopsMenuTypes.SHOP_MENU.get(), ShopsBlockScreen::new);
     }
 
 }

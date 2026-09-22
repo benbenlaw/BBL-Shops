@@ -2,10 +2,15 @@
 
   "itemGroup.shops": "BBL Shops",
   "menu.shops.shop": "The Big B Bucks Shop",
+  "menu.shops.open_catalog": "Choose items to auto-buy/sell",
 
   "item.shops.copper_coin": "Copper Coin",
   "item.shops.iron_coin": "Iron Coin",
   "item.shops.gold_coin": "Gold Coin",
+  "item.shops.player_balance_card": "Player Balance Card (BETA)",
+
+  "block.shops.shop_block": "Shop Block (BETA)",
+  "tooltip.shops.shop_block_info": "The Shop Block can be used to automatically sell and buy items. Add a bound Player Balance Card to the top slot, click on the Coin icon to set what you want to buy or sell, Left slots for selling items and right slots for item that are bought.",
 
   "tooltip.shops.shift": "Press SHIFT for more info",
   "tooltip.shops.search_bar": "Search for an item in the shop",
@@ -14,11 +19,13 @@
   "tooltip.shops.control_shift_sell": "Control + Shift Click to sell ALL of this Item",
   "tooltip.shops.shift_buy": "Shift Click to buy up to a stack of this Item",
   "tooltip.shops.control_shift_buy": "Control + Shift Click to buy as many as you can afford and hold",
+  "tooltip.shops.selector_buy": "Click to enable/disable auto-buying this item (max 3)",
+  "tooltip.shops.selector_sell": "Click to enable/disable auto-selling this item",
 
   "entity.shops.shop_trader": "Trader Entity",
 
   "tooltip.shops.bound_to": "This card is bound to %s",
-  "tooltip.shops.how_to": "Right Click to bound to your account",
+  "tooltip.shops.how_to": "Right Click to bind this card to your account",
   "tooltip.shops.value": "Worth %s B Bucks",
 
   "screen.shops.mode_buy_suffix": "Player Buys",
@@ -36,6 +43,14 @@
   "message.shops.no_sellable_item": "You don't have that item to sell.",
   "message.shops.not_unlocked": "You haven't unlocked this item yet.",
   "message.shops.not_enough": "You don't have enough B Bucks",
+  "message.shops.card_bound_self": "This balance card is now bound to you.",
+  "message.shops.auto_buy_set": "Set %s as the auto-buy item for this Shop Block.",
+  "message.shops.auto_buy_unavailable": "That item isn't buyable here.",
+  "message.shops.auto_buy_added": "Added to this Shop Block's auto-buy list.",
+  "message.shops.auto_buy_removed": "Removed from this Shop Block's auto-buy list.",
+  "message.shops.auto_buy_full": "This Shop Block can only auto-buy up to 3 items - remove one first.",
+  "message.shops.sell_whitelist_added": "This Shop Block will now auto-sell that item.",
+  "message.shops.sell_whitelist_removed": "This Shop Block will no longer auto-sell that item.",
 
   "tooltip.shops.mode_buy": "Buy",
   "tooltip.shops.mode_sell": "Sell",

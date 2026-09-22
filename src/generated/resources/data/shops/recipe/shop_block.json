@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "shops",
+  "key": {
+    "A": "#c:stones",
+    "B": "shops:copper_coin"
+  },
+  "pattern": [
+    "AAA",
+    "ABA",
+    "AAA"
+  ],
+  "result": {
+    "id": "shops:shop_block"
+  }
+}

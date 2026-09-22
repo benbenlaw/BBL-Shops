@@ -19,4 +19,7 @@ public class ShopsItems {
     public static final DeferredItem<Item> GOLD_COIN = ITEMS.registerItem("gold_coin",
             properties -> new CoinItem(properties, StartUpConfig.goldCoinValue.get()));
 
+    public static final DeferredItem<Item> PLAYER_BALANCE_CARD = ITEMS.registerItem("player_balance_card",
+            properties -> new PlayerBalanceCardItem(properties.stacksTo(1)));
+
 }

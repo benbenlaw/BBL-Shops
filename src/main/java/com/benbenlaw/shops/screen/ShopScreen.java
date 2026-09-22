@@ -4,6 +4,8 @@ import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.packets.BuyShopItem;
 import com.benbenlaw.shops.network.packets.SellShopItem;
+import com.benbenlaw.shops.network.packets.ToggleShopBlockAutoBuy;
+import com.benbenlaw.shops.network.packets.ToggleShopBlockSellItem;
 import com.benbenlaw.shops.recipe.ShopEntryRecipe;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -14,6 +16,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -70,6 +73,7 @@ public class ShopScreen extends Screen {
     private static final int SCROLLBAR_TRACK_COLOR = 0xFF141414;
     private static final int SCROLLBAR_THUMB_COLOR = 0xFF777777;
     private static final int UNLOCK_BORDER_COLOR = 0xFFFFD700;
+    private static final int SELECTED_BORDER_COLOR = 0xFF00E5FF;
 
     private static final int TAB_ACTIVE_COLOR = 0xFF2B2B2B;
     private static final int TAB_INACTIVE_COLOR = 0xFF181818;
@@ -80,6 +84,10 @@ public class ShopScreen extends Screen {
     private final List<Map.Entry<Identifier, ShopEntryRecipe>> allEntries;
     private List<Map.Entry<Identifier, ShopEntryRecipe>> filteredEntries;
     private final Identifier traderFilter;
+    private final Set<Identifier> nearbyTraders;
+    private final BlockPos selectorPos;
+    private final Set<Identifier> selectedBuyTargets;
+    private final Set<Identifier> selectedSellItems;
 
     private String searchText = "";
     private int scrollOffset = 0;
@@ -106,7 +114,7 @@ public class ShopScreen extends Screen {
     private String[] lastKnownStages = new String[0];
 
     public ShopScreen(Component title, Map<Identifier, ShopEntryRecipe> entries) {
-        this(title, entries, null);
+        this(title, entries, (Identifier) null);
     }
 
     public ShopScreen(Component title, Map<Identifier, ShopEntryRecipe> entries, Identifier traderFilter) {
@@ -114,6 +122,33 @@ public class ShopScreen extends Screen {
         this.allEntries = new ArrayList<>(entries.entrySet());
         this.filteredEntries = this.allEntries;
         this.traderFilter = traderFilter;
+        this.nearbyTraders = Set.of();
+        this.selectorPos = null;
+        this.selectedBuyTargets = Set.of();
+        this.selectedSellItems = Set.of();
+    }
+
+    public ShopScreen(Component title, Map<Identifier, ShopEntryRecipe> entries, Set<Identifier> nearbyTraders) {
+        super(title);
+        this.allEntries = new ArrayList<>(entries.entrySet());
+        this.filteredEntries = this.allEntries;
+        this.traderFilter = null;
+        this.nearbyTraders = nearbyTraders == null ? Set.of() : nearbyTraders;
+        this.selectorPos = null;
+        this.selectedBuyTargets = Set.of();
+        this.selectedSellItems = Set.of();
+    }
+
+    public ShopScreen(Component title, Map<Identifier, ShopEntryRecipe> entries, Set<Identifier> nearbyTraders,
+                       BlockPos selectorPos, List<Identifier> autoBuyTargets, List<Identifier> sellWhitelist) {
+        super(title);
+        this.allEntries = new ArrayList<>(entries.entrySet());
+        this.filteredEntries = this.allEntries;
+        this.traderFilter = null;
+        this.nearbyTraders = nearbyTraders == null ? Set.of() : nearbyTraders;
+        this.selectorPos = selectorPos;
+        this.selectedBuyTargets = new HashSet<>(autoBuyTargets == null ? List.of() : autoBuyTargets);
+        this.selectedSellItems = new HashSet<>(sellWhitelist == null ? List.of() : sellWhitelist);
     }
 
     @Override
@@ -191,9 +226,13 @@ public class ShopScreen extends Screen {
 
     private void applyFilters() {
         filteredEntries = allEntries.stream()
-                .filter(e -> traderFilter == null
-                        ? e.getValue().trader().isEmpty()
-                        : e.getValue().trader().equals(Optional.of(traderFilter)))
+                .filter(e -> {
+                    Optional<Identifier> trader = e.getValue().trader();
+                    if (traderFilter != null) {
+                        return trader.equals(Optional.of(traderFilter));
+                    }
+                    return trader.isEmpty() || trader.map(nearbyTraders::contains).orElse(false);
+                })
                 .filter(e -> mode == Mode.BUY ? e.getValue().buyPrice() > 0 : e.getValue().sellPrice() > 0)
                 .filter(e -> searchText.isEmpty()
                         || e.getValue().stack().create().getHoverName().getString().toLowerCase().contains(searchText))
@@ -351,16 +390,6 @@ public class ShopScreen extends Screen {
         int playerBalance = player != null ? player.getData(ShopsAttachments.PLAYER_BALANCE).getBalance() : 0;
 
         Component balanceText = Component.translatable("tooltip.shops.balance", playerBalance);
-        int balanceTextWidth = Minecraft.getInstance().font.width(balanceText);
-        int balanceIconWidth = 16;
-        int balanceGroupWidth = balanceIconWidth + 4 + balanceTextWidth;
-
-        int balanceX = panelX + panelWidth - PANEL_MARGIN - balanceGroupWidth;
-        int balanceIconY = panelY + 4;
-
-        graphics.item(ShopsItems.GOLD_COIN.get().getDefaultInstance(), balanceX, balanceIconY);
-        graphics.text(Minecraft.getInstance().font, balanceText,
-                balanceX + balanceIconWidth + 4, panelY + 8, 0xFFFFFFFF, true);
 
         boolean buyActive = mode == Mode.BUY;
         int sellTabX = tabsX + tabWidth;
@@ -407,12 +436,18 @@ public class ShopScreen extends Screen {
             ShopEntryRecipe recipe = placed.entry().getValue();
             ItemStack stack = recipe.stack().create();
             int price = mode == Mode.BUY ? recipe.buyPrice() : recipe.sellPrice();
-            boolean canInteract = mode == Mode.BUY
+            boolean selected = selectorPos != null && (mode == Mode.BUY
+                    ? selectedBuyTargets.contains(placed.entry().getKey())
+                    : selectedSellItems.contains(placed.entry().getKey()));
+            boolean canInteract = selectorPos != null || (mode == Mode.BUY
                     ? playerBalance >= price
-                    : playerHasItem(player, stack);
+                    : playerHasItem(player, stack));
 
             graphics.fill(boxX, boxY, boxX + ITEM_BOX_SIZE, boxY + ITEM_BOX_SIZE, BOX_BACKGROUND);
-            if (placed.showsUnlockBorder()) {
+            if (selected) {
+                graphics.outline(boxX, boxY, ITEM_BOX_SIZE, ITEM_BOX_SIZE, SELECTED_BORDER_COLOR);
+                graphics.outline(boxX + 1, boxY + 1, ITEM_BOX_SIZE - 2, ITEM_BOX_SIZE - 2, SELECTED_BORDER_COLOR);
+            } else if (placed.showsUnlockBorder()) {
                 graphics.outline(boxX, boxY, ITEM_BOX_SIZE, ITEM_BOX_SIZE, UNLOCK_BORDER_COLOR);
                 graphics.outline(boxX + 1, boxY + 1, ITEM_BOX_SIZE - 2, ITEM_BOX_SIZE - 2, UNLOCK_BORDER_COLOR);
             } else {
@@ -470,13 +505,19 @@ public class ShopScreen extends Screen {
                 lines.add(ClientTooltipComponent.create(line.getVisualOrderText()));
             }
 
-            String shiftKey = mode == Mode.BUY ? "tooltip.shops.shift_buy" : "tooltip.shops.shift_sell";
-            String controlShiftKey = mode == Mode.BUY ? "tooltip.shops.control_shift_buy" : "tooltip.shops.control_shift_sell";
+            if (selectorPos != null) {
+                String selectorKey = mode == Mode.BUY ? "tooltip.shops.selector_buy" : "tooltip.shops.selector_sell";
+                lines.add(ClientTooltipComponent.create(Component.translatable(selectorKey)
+                        .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
+            } else {
+                String shiftKey = mode == Mode.BUY ? "tooltip.shops.shift_buy" : "tooltip.shops.shift_sell";
+                String controlShiftKey = mode == Mode.BUY ? "tooltip.shops.control_shift_buy" : "tooltip.shops.control_shift_sell";
 
-            lines.add(ClientTooltipComponent.create(Component.translatable(shiftKey)
-                    .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
-            lines.add(ClientTooltipComponent.create(Component.translatable(controlShiftKey)
-                    .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
+                lines.add(ClientTooltipComponent.create(Component.translatable(shiftKey)
+                        .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
+                lines.add(ClientTooltipComponent.create(Component.translatable(controlShiftKey)
+                        .withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.GRAY).getVisualOrderText()));
+            }
 
             graphics.tooltip(Minecraft.getInstance().font, lines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null, stack);
         }
@@ -521,6 +562,26 @@ public class ShopScreen extends Screen {
             if (event.x() >= boxX && event.x() < boxX + ITEM_BOX_SIZE
                     && event.y() >= boxY && event.y() < buttonY + BUY_BUTTON_HEIGHT
                     && event.y() >= viewportTop && event.y() < viewportBottom) {
+
+                if (selectorPos != null) {
+                    Identifier recipeId = placed.entry().getKey();
+                    if (mode == Mode.BUY) {
+                        if (selectedBuyTargets.contains(recipeId)) {
+                            selectedBuyTargets.remove(recipeId);
+                        } else {
+                            selectedBuyTargets.add(recipeId);
+                        }
+                        ClientPacketDistributor.sendToServer(new ToggleShopBlockAutoBuy(selectorPos, recipeId));
+                    } else {
+                        if (selectedSellItems.contains(recipeId)) {
+                            selectedSellItems.remove(recipeId);
+                        } else {
+                            selectedSellItems.add(recipeId);
+                        }
+                        ClientPacketDistributor.sendToServer(new ToggleShopBlockSellItem(selectorPos, recipeId));
+                    }
+                    return true;
+                }
 
                 ShopEntryRecipe recipe = placed.entry().getValue();
                 ItemStack tradeStack = recipe.stack().create();

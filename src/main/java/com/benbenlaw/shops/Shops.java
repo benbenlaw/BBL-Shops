@@ -1,13 +1,16 @@
 package com.benbenlaw.shops;
 
 import com.benbenlaw.shops.attachments.ShopsAttachments;
+import com.benbenlaw.shops.block.ShopsBlocks;
+import com.benbenlaw.shops.block.ShopsBlockEntities;
+import com.benbenlaw.shops.component.ShopsDataComponents;
 import com.benbenlaw.shops.config.StartUpConfig;
-import com.benbenlaw.shops.datamaps.ShopsDataMaps;
 import com.benbenlaw.shops.entity.ShopsEntityTypes;
 import com.benbenlaw.shops.item.ShopsCreativeTab;
 import com.benbenlaw.shops.item.ShopsItems;
 import com.benbenlaw.shops.network.ShopsNetworking;
 import com.benbenlaw.shops.recipe.ShopsRecipeTypes;
+import com.benbenlaw.shops.screen.ShopsMenuTypes;
 import com.benbenlaw.shops.sound.ShopsSounds;
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
@@ -28,12 +31,16 @@ public class Shops {
         modContainer.registerConfig(ModConfig.Type.STARTUP, StartUpConfig.SPEC, "bbl/shops/coin_values.toml");
 
         ShopsAttachments.ATTACHMENT_TYPES.register(eventBus);
+        ShopsDataComponents.DATA_COMPONENTS.register(eventBus);
+        ShopsBlocks.BLOCKS.register(eventBus);
+        ShopsBlockEntities.BLOCK_ENTITIES.register(eventBus);
         ShopsItems.ITEMS.register(eventBus);
         ShopsCreativeTab.CREATIVE_MODE_TABS.register(eventBus);
         ShopsSounds.SOUND_EVENTS.register(eventBus);
         ShopsRecipeTypes.SERIALIZER.register(eventBus);
         ShopsRecipeTypes.TYPES.register(eventBus);
         ShopsEntityTypes.ENTITY_TYPES.register(eventBus);
+        ShopsMenuTypes.MENUS.register(eventBus);
 
         eventBus.addListener(this::commonSetup);
 

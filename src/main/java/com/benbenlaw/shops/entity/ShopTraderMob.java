@@ -102,16 +102,20 @@ public class ShopTraderMob extends PathfinderMob {
 
         if (player.isCrouching()) return InteractionResult.PASS;
 
-        Optional<BlockPos> jobSite = getOrFindJobSite();
-        if (jobSite.isEmpty()) {
+        Optional<Identifier> traderId = getTraderId();
+        if (traderId.isEmpty()) {
             serverPlayer.sendSystemMessage(Component.literal("This trader hasn't got a shop set up yet."));
             return InteractionResult.SUCCESS;
         }
 
-        Identifier traderId = BuiltInRegistries.BLOCK.getKey(this.level().getBlockState(jobSite.get()).getBlock());
         String traderName = this.getData(ShopsAttachments.SHOP_TRADER_DATA).traderName().orElse("");
-        PacketDistributor.sendToPlayer(serverPlayer, new OpenShopTraderScreen(traderId, traderName));
+        PacketDistributor.sendToPlayer(serverPlayer, new OpenShopTraderScreen(traderId.get(), traderName));
         return InteractionResult.SUCCESS;
+    }
+
+    public Optional<Identifier> getTraderId() {
+        return getOrFindJobSite()
+                .map(jobSite -> BuiltInRegistries.BLOCK.getKey(this.level().getBlockState(jobSite).getBlock()));
     }
 
     public Optional<BlockPos> getOrFindJobSite() {
