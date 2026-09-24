@@ -22,7 +22,8 @@ public class ShopsDataGenerator {
 
         generator.addProvider(true, new ShopsModelProvider(packOutput));
         generator.addProvider(true, new ShopsDataMapsProvider(packOutput, lookupProvider));
+        generator.addProvider(true, new ShopsLootTableProvider(packOutput, lookupProvider));
+        generator.addProvider(true, new ShopsBlockTagsProvider(packOutput, lookupProvider));
         generator.addProvider(true, new ShopsRecipeProvider.Runner (packOutput, lookupProvider));
-
     }
 }

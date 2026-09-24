@@ -4,7 +4,6 @@ import com.benbenlaw.core.block.entity.handler.item.SyncableItemHandler;
 import com.benbenlaw.core.screen.SimpleAbstractContainerMenu;
 import com.benbenlaw.core.screen.util.slot.InputSlot;
 import com.benbenlaw.core.screen.util.slot.ResultSlot;
-import com.benbenlaw.core.screen.util.slot.WhitelistSlot;
 import com.benbenlaw.shops.block.entity.ShopBlockEntity;
 import com.benbenlaw.shops.item.ShopsItems;
 import net.minecraft.core.BlockPos;
