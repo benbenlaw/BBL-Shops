@@ -5,6 +5,7 @@ import com.benbenlaw.core.block.entity.handler.item.SyncableItemHandler;
 import com.benbenlaw.shops.attachments.PlayerBalanceData;
 import com.benbenlaw.shops.attachments.ShopsAttachments;
 import com.benbenlaw.shops.block.ShopsBlockEntities;
+import com.benbenlaw.shops.block.custom.ShopBlock;
 import com.benbenlaw.shops.component.ShopsDataComponents;
 import com.benbenlaw.shops.entity.ShopTraderMob;
 import com.benbenlaw.shops.item.PlayerBalanceCardItem;
@@ -150,6 +151,11 @@ public class ShopBlockEntity extends SyncableBlockEntity implements MenuProvider
 
     public void tick() {
         if (level == null || level.isClientSide() || !(level instanceof ServerLevel serverLevel)) return;
+
+        boolean isRunning = level.getBlockState(worldPosition).getValue(ShopBlock.RUNNING);
+
+        if (!isRunning) return;
+
         tickCounter++;
 
         if (tickCounter % TRADER_REFRESH_INTERVAL_TICKS == 0) {
